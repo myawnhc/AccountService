@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.github.myawnhc</groupId>
+    <artifactId>accountservice</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>15</maven.compiler.source>
+        <maven.compiler.target>15</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <!-- Definitions of the APIs our service implements -->
+        <dependency>
+            <groupId>com.github.myawnhc</groupId>
+            <artifactId>AccountProto</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <!-- GrpcServer, Jet connectors for Grpc Source and Sink -->
+        <dependency>
+            <groupId>com.github.myawnhc</groupId>
+            <artifactId>grpc-connectors</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <!-- Event Sourcing Framework -->
+        <dependency>
+            <groupId>com.github.myawnhc</groupId>
+            <artifactId>eventsourcing</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <!-- jackson dependencies for yaml parsing in configuration -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.10.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>2.10.2</version>
+        </dependency>
+    </dependencies>
+
+</project>
