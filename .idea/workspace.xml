@@ -5,31 +5,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="226c2075-f97e-4e81-a87e-cf570e78361e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/AccountAPIImpl.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/AdjustBalancePipeline.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/OpenAccountPipeline.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/configuration/ServiceConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/domain/Account.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/AccountCompactionEvent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/AccountCompactionEventSerializer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/AccountEvent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/BalanceChangeEvent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/BalanceChangeEventSerializer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/OpenAccountEvent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/OpenAccountEventSerializer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/AccountService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/views/AccountDAO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/service.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/TEMPCompletionMapListenerFuture.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/OpenAccountPipeline.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/OpenAccountPipeline.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/AccountService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/AccountService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -46,16 +38,17 @@
     <option name="showLibraryContents" value="true" />
     <option name="showMembers" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/myawn/Documents/GitHub/AccountService/src/main/java/org/hazelcast/msfdemo/acctsvc/events&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.28390804&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "last_opened_file_path": "/Users/myawn/Documents/GitHub/AccountService/src/main/java/org/hazelcast/msfdemo/acctsvc/events",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.28390804"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events" />
@@ -69,7 +62,20 @@
       <recent name="org.hazelcast.msfdemo.acctsvc.domain" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Application.org.hazelcast.msfdemo.acctsvc.business.TEMPCompletionMapListenerFuture">
+    <configuration name="org.hazelcast.msfdemo.acctsvc.business.TEMPCompletionMapListenerFuture" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="org.hazelcast.msfdemo.acctsvc.business.TEMPCompletionMapListenerFuture" />
+      <module name="AccountService" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="org.hazelcast.eventsourcing.sync.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="org.hazelcast.msfdemo.acctsvc.service.AccountService" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="org.hazelcast.msfdemo.acctsvc.service.AccountService" />
       <module name="AccountService" />
@@ -86,6 +92,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.org.hazelcast.msfdemo.acctsvc.business.TEMPCompletionMapListenerFuture" />
         <item itemvalue="Application.org.hazelcast.msfdemo.acctsvc.service.AccountService" />
       </list>
     </recent_temporary>
@@ -99,7 +106,19 @@
       <option name="presentableId" value="Default" />
       <updated>1668359545495</updated>
     </task>
+    <task id="LOCAL-00001" summary="Initial commit">
+      <created>1673893408286</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1673893408286</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Initial commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="Initial commit" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -108,6 +127,26 @@
           <url>file://$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/AdjustBalancePipeline.java</url>
           <line>120</line>
           <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/TEMPCompletionMapListenerFuture.java</url>
+          <line>86</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/TEMPCompletionMapListenerFuture.java</url>
+          <line>73</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/TEMPCompletionMapListenerFuture.java</url>
+          <line>55</line>
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/TEMPCompletionMapListenerFuture.java</url>
+          <line>75</line>
+          <option name="timeStamp" value="8" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

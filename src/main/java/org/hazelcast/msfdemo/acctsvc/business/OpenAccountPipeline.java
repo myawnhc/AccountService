@@ -22,12 +22,15 @@ import com.hazelcast.jet.datamodel.Tuple2;
 import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.ServiceFactories;
 import com.hazelcast.jet.pipeline.ServiceFactory;
-import com.hazelcast.jet.pipeline.Sinks;
 import com.hazelcast.jet.pipeline.StreamStage;
+import com.hazelcast.map.IMap;
 import org.example.grpc.GrpcConnector;
 
 import org.example.grpc.MessageWithUUID;
 import org.hazelcast.eventsourcing.EventSourcingController;
+import org.hazelcast.eventsourcing.event.PartitionedSequenceKey;
+import org.hazelcast.eventsourcing.sync.CompletionInfo;
+import org.hazelcast.eventsourcing.sync.CompletionMapListenerFuture;
 import org.hazelcast.msfdemo.acctsvc.domain.Account;
 import org.hazelcast.msfdemo.acctsvc.events.AccountEvent;
 import org.hazelcast.msfdemo.acctsvc.events.OpenAccountEvent;
@@ -121,10 +124,31 @@ public class OpenAccountPipeline implements Runnable {
                 ServiceFactories.sharedService(
                         (ctx) -> service.getEventSourcingController());
 
+        // Not yet being used ... need stage following eventcontroller stage
+        ServiceFactory<?, CompletionMapListenerFuture<PartitionedSequenceKey<String>,CompletionInfo>> completionMapListenerFutureServiceFactory =
+                ServiceFactories.sharedService(
+                        ctx -> {
+                            String mapName = service.getEventSourcingController().getCompletionMapName();
+                            IMap<PartitionedSequenceKey<String>, CompletionInfo> cmap = ctx.hazelcastInstance().getMap(mapName);
+                            CompletionMapListenerFuture<PartitionedSequenceKey<String>, CompletionInfo> adapter = new CompletionMapListenerFuture<>();
+                            cmap.addEntryListener(adapter, true);
+                            return adapter;
+                        }
+                );
+
         events.mapUsingService(eventController, (controller, tuple) -> {
-            controller.handleEvent(tuple.f1());
+            PartitionedSequenceKey<String> eventKey = controller.handleEvent(tuple.f1());
+            // TODO: should wait for entry in completionsMap corresponding to eventKey
+            //  to be updated by the handleEvent pipeline ...
             return tuple;
         })
+
+//        // NEW experimental
+//        .mapUsingServiceAsync(completionMapListenerFutureServiceFactory, (adapter, tuple) -> {
+//            System.out.println("Adapter is " + adapter);
+//            return adapter;
+//            //return tuple;
+//        })
 
         // Send response back via GrpcSink
         .map(tuple -> {

@@ -30,17 +30,11 @@ import org.hazelcast.msfdemo.acctsvc.events.AccountEvent;
 import org.hazelcast.msfdemo.acctsvc.events.BalanceChangeEventSerializer;
 import org.hazelcast.msfdemo.acctsvc.events.OpenAccountEventSerializer;
 
-//import org.hazelcast.msfdemo.acctsvc.domain.Account;
-//import org.hazelcast.msfdemo.acctsvc.views.AccountDAO;
-
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class AccountService {
-
-    //private AccountDAO accountDAO;
-    //private AccountEventStore eventStore;
 
     private HazelcastInstance hazelcast;
     private EventSourcingController<Account,String, AccountEvent> eventSourcingController;
@@ -91,15 +85,6 @@ public class AccountService {
 
     }
 
-    private void initEventStore(HazelcastInstance hazelcast) {
-        // DAO not currently being used but will be back as a Materialized View ...
-        //accountDAO = new AccountDAO(controller);
-
-        // Initialize the EventStore
-        //eventStore = new AccountEventStore(controller.getHazelcastInstance());
-        // TODO: should have process that occasionally snapshots & evicts
-    }
-
     private void initEventSourcingController(HazelcastInstance hazelcast) {
         eventSourcingController = EventSourcingController.<Account,String, AccountEvent>newBuilder(hazelcast, "account")
                 .build();
@@ -130,8 +115,6 @@ public class AccountService {
     public boolean isEmbedded() { return embedded; }
     public byte[] getClientConfig() { return clientConfig; }
 
-//    public AccountEventStore getEventStore() { return eventStore; }
-//    public IMap<String, Account> getView() { return accountDAO.getMap(); }
 
     public void shutdown() {
         // notify Hazelcast controller, it can shut down if no other
