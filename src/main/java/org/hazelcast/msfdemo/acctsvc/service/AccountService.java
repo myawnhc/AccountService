@@ -57,6 +57,7 @@ public class AccountService {
                     .addSerializer(new OpenAccountEventSerializer())
                     .addSerializer(new BalanceChangeEventSerializer());
             // NOTE: we may need additional configuration here!
+            config = EventSourcingController.addRequiredConfigItems(config);
             hazelcast = Hazelcast.newHazelcastInstance(config);
         } else {
             // see MSF project for getting input stream of clientconfig byte[] and using it

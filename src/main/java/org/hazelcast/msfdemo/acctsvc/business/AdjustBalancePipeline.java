@@ -111,15 +111,15 @@ public class AdjustBalancePipeline implements Runnable {
                 ServiceFactories.sharedService(
                         (ctx) -> service.getEventSourcingController());
 
-        events.mapUsingService(eventController, (controller, tuple) -> {
-            controller.handleEvent(tuple.f1());
-            return tuple;
+        events.mapUsingServiceAsync(eventController, (controller, tuple) -> {
+            // Returns CompletableFuture<CompletionInfo>
+            return controller.handleEvent(tuple.f1(), tuple.f0());
         })
 
         // Send response back via GrpcSink
-        .map(tuple -> {
-            UUID uuid = tuple.f0();
-            BalanceChangeEvent event = tuple.f1();
+        .map(completion -> {
+            UUID uuid = completion.getUUID();
+            BalanceChangeEvent event = (BalanceChangeEvent) completion.getEvent();
             //String acctNumber = event.getKey();
             HazelcastJsonValue payload = event.getPayload();
             JSONObject jobj = new JSONObject(payload.getValue());
