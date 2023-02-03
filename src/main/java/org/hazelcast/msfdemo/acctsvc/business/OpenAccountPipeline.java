@@ -23,10 +23,13 @@ import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.ServiceFactories;
 import com.hazelcast.jet.pipeline.ServiceFactory;
 import com.hazelcast.jet.pipeline.StreamStage;
+import com.hazelcast.map.IMap;
 import org.example.grpc.GrpcConnector;
 
 import org.example.grpc.MessageWithUUID;
 import org.hazelcast.eventsourcing.EventSourcingController;
+import org.hazelcast.eventsourcing.event.PartitionedSequenceKey;
+import org.hazelcast.eventsourcing.sync.CompletionInfo;
 import org.hazelcast.msfdemo.acctsvc.domain.Account;
 import org.hazelcast.msfdemo.acctsvc.events.AccountEvent;
 import org.hazelcast.msfdemo.acctsvc.events.OpenAccountEvent;
@@ -39,39 +42,38 @@ import static org.hazelcast.msfdemo.acctsvc.events.AccountOuterClass.OpenAccount
 import java.io.File;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class OpenAccountPipeline implements Runnable {
 
     private static AccountService service;
+    private List<URL> dependencies;
 
-    public OpenAccountPipeline(AccountService service) {
+    public OpenAccountPipeline(AccountService service, byte[] clientConfig, List<URL> dependentJars) {
+        System.out.println("OPA.<init> with cc " + clientConfig);
         OpenAccountPipeline.service = service;
         if (service == null)
             throw new IllegalArgumentException("Service cannot be null");
+        // When running in client/server mode, service won't be initialized yet
+        if (service.getEventSourcingController() == null && clientConfig != null) {
+            System.out.println("member/pipeline service init");
+            service.initService(clientConfig);
+        }
+        this.dependencies = dependentJars;
+
     }
 
     @Override
     public void run() {
         try {
-            // Currently running embedded with all classes local -- so the upload of
-            // jars is not being used; keeping code in place because eventually we'll deploy
-            // this to the cloud and need to handle deployment of user classes.
-            //MSFController controller = MSFController.getOrCreateInstance("AccountService", service.isEmbedded(), service.getClientConfig());
-            File fw = new File("/ext/framework-1.0-SNAPSHOT.jar");
-            URL framework = fw.toURI().toURL();
-            File grpc = new File("/ext/account-proto-1.0-SNAPSHOT.jar");
-            URL grpcdefs = grpc.toURI().toURL();
-            File svc = new File("/application.jar");
-            URL serviceJar = svc.toURI().toURL();
-            //System.out.println(">>> Found files? " + fw.exists() + " " + grpc.exists() + " " + svc.exists());
-            URL[] jobJars = new URL[] { framework, grpcdefs, serviceJar };
-            Class[] jobClasses = new Class[] {}; // {AccountOuterClass.class };
             System.out.println("OpenAccountPipeline.run() invoked, submitting job");
             HazelcastInstance hazelcast = service.getHazelcastInstance();
             JobConfig jobConfig = new JobConfig();
             jobConfig.setName("AccountService.OpenAccount");
-            // TODO: set jars
+            for (URL url : dependencies)
+                jobConfig.addJar(url);
             hazelcast.getJet().newJob(createPipeline(), jobConfig);
 
         } catch (Exception e) { // Happens if our pipeline is not valid
@@ -84,6 +86,7 @@ public class OpenAccountPipeline implements Runnable {
 
         final String SERVICE_NAME = "account.Account";
         final String METHOD_NAME = "open";
+        //AccountService service = OpenAccountPipeline.service;
 
         StreamStage<MessageWithUUID<OpenAccountRequest>> requests =
                 p.readFrom(GrpcConnector.<OpenAccountRequest>grpcUnarySource(SERVICE_NAME, METHOD_NAME))
@@ -118,18 +121,31 @@ public class OpenAccountPipeline implements Runnable {
         // materialized view, and publish the event to all subscribers
         ServiceFactory<?, EventSourcingController<Account,String, AccountEvent>> eventController =
                 ServiceFactories.sharedService(
-                        (ctx) -> service.getEventSourcingController());
+                        // In C/S config, service is uninitialized!
+                        (ctx) -> {
+                            if (service == null) {
+                                System.out.println("**** ESC service factory needs to initialize service");
+                                Map<String,Object> configMap = (Map<String, Object>) ctx.hazelcastInstance().getMap("ServiceConfig").get("AccountService");
+                                byte[] clientConfig = (byte[]) configMap.get("clientConfig");
+                                service = new AccountService();
+                                service.initService(clientConfig);
+                                System.out.println("service initialized from configmap");
+                            }
+                            return service.getEventSourcingController();
+                        });
 
-        events.mapUsingServiceAsync(eventController, (controller, tuple) -> {
-            // Returns CompletableFuture<CompletionInfo>
-            return controller.handleEvent(tuple.f1(), tuple.f0());
+
+        events.mapUsingService(eventController, (controller, tuple) -> {
+            controller.handleEvent(tuple.f1());
+            // TODO: should wait for entry in completionsMap corresponding to eventKey
+            //  to be updated by the handleEvent pipeline ...
+            return tuple;
         })
 
-        // Pipeline continues when Future is satisfied
         // Send response back via GrpcSink
-        .map(completion -> {
-            UUID uuid = completion.getUUID();
-            OpenAccountEvent event = (OpenAccountEvent) completion.getEvent();
+        .map(tuple -> {
+            UUID uuid = tuple.f0();
+            OpenAccountEvent event = tuple.f1();
             String acctNumber = event.getKey();
             OpenAccountResponse response = OpenAccountResponse.newBuilder()
                     .setAccountNumber(acctNumber)

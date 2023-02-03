@@ -55,24 +55,27 @@ public class AdjustBalancePipeline implements Runnable {
     @Override
     public void run() {
         try {
-            // Currently running embedded with all classes local -- so the upload of
-            // jars is not being used; keeping code in place because eventually we'll deploy
-            // this to the cloud and need to handle deployment of user classes.
-            //MSFController controller = MSFController.getOrCreateInstance("AccountService", service.isEmbedded(), service.getClientConfig());
-            File fw = new File("/ext/framework-1.0-SNAPSHOT.jar");
-            URL framework = fw.toURI().toURL();
-            File grpc = new File("/ext/account-proto-1.0-SNAPSHOT.jar");
-            URL grpcdefs = grpc.toURI().toURL();
-            File svc = new File("/application.jar");
-            URL serviceJar = svc.toURI().toURL();
-            //System.out.println(">>> Found files? " + fw.exists() + " " + grpc.exists() + " " + svc.exists());
-            URL[] jobJars = new URL[] { framework, grpcdefs, serviceJar };
-            Class[] jobClasses = new Class[] {}; // {AccountOuterClass.class };
+            System.out.println("AdjustBalancePipeline.run");
+            // mvn resources plugin should pull the dependent jars into the
+            // correct location ...
+            File esJar = new File("target/classes/eventsourcing-1.0-SNAPSHOT.jar");
+            URL es = esJar.toURI().toURL();
+            File grpcJar = new File("target/classes/grpc-connectors-1.0-SNAPSHOT.jar");
+            URL grpc = grpcJar.toURI().toURL();
+            File protoJar = new File("target/classes/AccountProto-1.0-SNAPSHOT.jar");
+            URL proto = protoJar.toURI().toURL();
+            File acctsvcJar = new File("target/accountservice-1.0-SNAPSHOT.jar");
+            URL acctsvc = acctsvcJar.toURI().toURL();
+            System.out.println(">>> ADJUST Found files? ES " + esJar.exists() + ", GRPC " + grpcJar.exists() + ", AccountService " + acctsvcJar.exists());
             System.out.println("AdjustBalancePipeline.run() invoked, submitting job");
+
             HazelcastInstance hazelcast = service.getHazelcastInstance();
             JobConfig jobConfig = new JobConfig();
             jobConfig.setName("AccountService.AdjustBalance");
-            // TODO: set jars
+            jobConfig.addJar(es);
+            jobConfig.addJar(grpc);
+            jobConfig.addJar(proto);
+            jobConfig.addJar(acctsvc);
             hazelcast.getJet().newJob(createPipeline(), jobConfig);
 
         } catch (Exception e) { // Happens if our pipeline is not valid

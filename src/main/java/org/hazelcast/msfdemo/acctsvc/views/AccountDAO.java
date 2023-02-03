@@ -35,7 +35,7 @@ public class AccountDAO {
 
     private final String CREATE_MAPPING  =
         """
-        CREATE MAPPING account_VIEW
+        CREATE MAPPING IF NOT EXISTS account_VIEW
         TYPE IMap
         Options (
             'keyFormat' = 'java',

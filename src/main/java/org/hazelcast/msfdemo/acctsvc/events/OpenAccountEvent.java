@@ -18,6 +18,7 @@
 package org.hazelcast.msfdemo.acctsvc.events;
 
 import com.hazelcast.core.HazelcastJsonValue;
+import com.hazelcast.nio.serialization.genericrecord.GenericRecord;
 import com.hazelcast.org.json.JSONObject;
 import com.hazelcast.sql.SqlRow;
 import org.hazelcast.msfdemo.acctsvc.domain.Account;
@@ -42,6 +43,14 @@ public class OpenAccountEvent extends AccountEvent {
         setPayload(payload);
         eventClass = OpenAccountEvent.class.getCanonicalName();
         setTimestamp(row.getObject("timestamp"));
+    }
+
+    // EXPERIMENTAL
+    public OpenAccountEvent(GenericRecord record) {
+        this.key = record.getString("key");
+        this.eventClass = record.getString("eventClass");
+        this.payload = new HazelcastJsonValue(record.getString("payload"));
+        this.timestamp = record.getInt64("timestamp");
     }
 
     @Override
