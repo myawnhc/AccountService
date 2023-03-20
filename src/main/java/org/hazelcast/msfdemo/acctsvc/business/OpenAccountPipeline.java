@@ -23,28 +23,25 @@ import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.ServiceFactories;
 import com.hazelcast.jet.pipeline.ServiceFactory;
 import com.hazelcast.jet.pipeline.StreamStage;
-import com.hazelcast.map.IMap;
 import org.example.grpc.GrpcConnector;
-
 import org.example.grpc.MessageWithUUID;
 import org.hazelcast.eventsourcing.EventSourcingController;
-import org.hazelcast.eventsourcing.event.PartitionedSequenceKey;
 import org.hazelcast.eventsourcing.sync.CompletionInfo;
 import org.hazelcast.msfdemo.acctsvc.domain.Account;
 import org.hazelcast.msfdemo.acctsvc.events.AccountEvent;
 import org.hazelcast.msfdemo.acctsvc.events.OpenAccountEvent;
 import org.hazelcast.msfdemo.acctsvc.service.AccountService;
 
-import static com.hazelcast.jet.datamodel.Tuple2.tuple2;
-import static org.hazelcast.msfdemo.acctsvc.events.AccountOuterClass.OpenAccountRequest;
-import static org.hazelcast.msfdemo.acctsvc.events.AccountOuterClass.OpenAccountResponse;
-
-import java.io.File;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+
+import static com.hazelcast.jet.datamodel.Tuple2.tuple2;
+import static org.hazelcast.msfdemo.acctsvc.events.AccountOuterClass.OpenAccountRequest;
+import static org.hazelcast.msfdemo.acctsvc.events.AccountOuterClass.OpenAccountResponse;
 
 public class OpenAccountPipeline implements Runnable {
 
@@ -58,11 +55,9 @@ public class OpenAccountPipeline implements Runnable {
             throw new IllegalArgumentException("Service cannot be null");
         // When running in client/server mode, service won't be initialized yet
         if (service.getEventSourcingController() == null && clientConfig != null) {
-            System.out.println("member/pipeline service init");
             service.initService(clientConfig);
         }
         this.dependencies = dependentJars;
-
     }
 
     @Override
@@ -132,27 +127,32 @@ public class OpenAccountPipeline implements Runnable {
                                 System.out.println("service initialized from configmap");
                             }
                             return service.getEventSourcingController();
-                        });
+                        }).toNonCooperative(); // Experimental change
 
+        // Can probably remove these - wasn't Jet threads that were the issue, but
+        // GrpcServer threads.  Fixed with a fixed thread pool in GrpcServer creation.
+        int concurrentOpsPerProcessor = 2; // 4 is default - ran out of native threads on laptop
+        boolean preserveOrder = false;
 
-        events.mapUsingService(eventController, (controller, tuple) -> {
-            controller.handleEvent(tuple.f1());
-            // TODO: should wait for entry in completionsMap corresponding to eventKey
-            //  to be updated by the handleEvent pipeline ...
-            return tuple;
-        })
+        events.mapUsingServiceAsync(eventController, concurrentOpsPerProcessor,
+                        preserveOrder, (controller, tuple) -> {
+            CompletableFuture<CompletionInfo> completion = controller.handleEvent(tuple.f1(), tuple.f0());
+            return completion;
+        }).setName("Invoke EventSourcingController.handleEvent")
 
         // Send response back via GrpcSink
-        .map(tuple -> {
-            UUID uuid = tuple.f0();
-            OpenAccountEvent event = tuple.f1();
+        .map(completion -> {
+            UUID uuid = completion.getUUID();
+            OpenAccountEvent event = (OpenAccountEvent) completion.getEvent();
             String acctNumber = event.getKey();
             OpenAccountResponse response = OpenAccountResponse.newBuilder()
                     .setAccountNumber(acctNumber)
                     .build();
             MessageWithUUID<OpenAccountResponse> wrapped = new MessageWithUUID<>(uuid, response);
+            if (uuid == null) System.err.println("** NULL UUID");
+            else if (acctNumber == null) System.err.println("** NULL acctNumber");
             return wrapped;
-        })
+        }).setName("Build OpenAccountResponse")
         .writeTo(GrpcConnector.grpcUnarySink(SERVICE_NAME, METHOD_NAME))
                 .setName("Write response to GrpcSink");
 

@@ -36,6 +36,7 @@ import org.hazelcast.msfdemo.acctsvc.service.AccountService;
 import java.io.File;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.util.List;
 import java.util.UUID;
 
 import static com.hazelcast.jet.datamodel.Tuple2.tuple2;
@@ -45,37 +46,28 @@ import static org.hazelcast.msfdemo.acctsvc.events.AccountOuterClass.AdjustBalan
 public class AdjustBalancePipeline implements Runnable {
 
     private static AccountService service;
+    private List<URL> dependencies;
 
-    public AdjustBalancePipeline(AccountService service) {
+    public AdjustBalancePipeline(AccountService service, byte[] clientConfig, List<URL> dependentJars) {
         AdjustBalancePipeline.service = service;
         if (service == null)
             throw new IllegalArgumentException("Service cannot be null");
+        // When running in client/server mode, service won't be initialized yet
+        if (service.getEventSourcingController() == null && clientConfig != null) {
+            service.initService(clientConfig);
+        }
+        this.dependencies = dependentJars;
     }
 
     @Override
     public void run() {
         try {
             System.out.println("AdjustBalancePipeline.run");
-            // mvn resources plugin should pull the dependent jars into the
-            // correct location ...
-            File esJar = new File("target/classes/eventsourcing-1.0-SNAPSHOT.jar");
-            URL es = esJar.toURI().toURL();
-            File grpcJar = new File("target/classes/grpc-connectors-1.0-SNAPSHOT.jar");
-            URL grpc = grpcJar.toURI().toURL();
-            File protoJar = new File("target/classes/AccountProto-1.0-SNAPSHOT.jar");
-            URL proto = protoJar.toURI().toURL();
-            File acctsvcJar = new File("target/accountservice-1.0-SNAPSHOT.jar");
-            URL acctsvc = acctsvcJar.toURI().toURL();
-            System.out.println(">>> ADJUST Found files? ES " + esJar.exists() + ", GRPC " + grpcJar.exists() + ", AccountService " + acctsvcJar.exists());
-            System.out.println("AdjustBalancePipeline.run() invoked, submitting job");
-
             HazelcastInstance hazelcast = service.getHazelcastInstance();
             JobConfig jobConfig = new JobConfig();
             jobConfig.setName("AccountService.AdjustBalance");
-            jobConfig.addJar(es);
-            jobConfig.addJar(grpc);
-            jobConfig.addJar(proto);
-            jobConfig.addJar(acctsvc);
+            for (URL url : dependencies)
+                jobConfig.addJar(url);
             hazelcast.getJet().newJob(createPipeline(), jobConfig);
 
         } catch (Exception e) { // Happens if our pipeline is not valid
@@ -116,6 +108,7 @@ public class AdjustBalancePipeline implements Runnable {
 
         events.mapUsingServiceAsync(eventController, (controller, tuple) -> {
             // Returns CompletableFuture<CompletionInfo>
+            //System.out.println("AJP calls handleEvent with " + tuple.f0() + "," + tuple.f1());
             return controller.handleEvent(tuple.f1(), tuple.f0());
         })
 

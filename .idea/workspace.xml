@@ -4,17 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="226c2075-f97e-4e81-a87e-cf570e78361e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/resources/hazelcast-client.local.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/hazelcast.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/startLocal.sh" afterDir="false" />
+    <list default="true" id="226c2075-f97e-4e81-a87e-cf570e78361e" name="Changes" comment="Work on supporting client/server deployment model (incomplete)">
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/GrpcServer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/AdjustBalancePipeline.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/AdjustBalancePipeline.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/OpenAccountPipeline.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/OpenAccountPipeline.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/OpenAccountEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/OpenAccountEvent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/AccountService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/AccountService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/views/AccountDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/views/AccountDAO.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/service.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/service.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -158,30 +153,44 @@
       <option name="project" value="LOCAL" />
       <updated>1674570897568</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Work on supporting client/server deployment model (incomplete)">
+      <created>1675435539283</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1675435539283</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Initial commit" />
     <MESSAGE value="Exploratory work on completion tracking (will continue on a branch since this may not pan out)" />
-    <option name="LAST_COMMIT_MESSAGE" value="Exploratory work on completion tracking (will continue on a branch since this may not pan out)" />
+    <MESSAGE value="Work on supporting client/server deployment model (incomplete)" />
+    <option name="LAST_COMMIT_MESSAGE" value="Work on supporting client/server deployment model (incomplete)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/AdjustBalancePipeline.java</url>
-          <line>123</line>
-          <option name="timeStamp" value="3" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/AccountService.java</url>
-          <line>250</line>
+          <line>244</line>
           <option name="timeStamp" value="10" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/AccountService.java</url>
-          <line>228</line>
+          <line>222</line>
           <option name="timeStamp" value="13" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">

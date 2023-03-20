@@ -24,7 +24,6 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.map.IMap;
-import org.example.grpc.GrpcServer;
 import org.hazelcast.eventsourcing.EventSourcingController;
 import org.hazelcast.eventsourcing.event.DomainObject;
 import org.hazelcast.eventsourcing.event.PartitionedSequenceKey;
@@ -202,17 +201,12 @@ public class AccountService implements HazelcastInstanceAware {
             OpenAccountPipeline openPipeline = new OpenAccountPipeline(this, cc, dependencies);
             executor.submit(openPipeline);
 
+            AdjustBalancePipeline adjPipeline = new AdjustBalancePipeline(this, cc, dependencies);
+            executor.submit(adjPipeline);
+
         } catch (Throwable t) {
             t.printStackTrace();
         }
-
-
-//        AdjustBalancePipeline adjPipeline = new AdjustBalancePipeline(this);
-//        try {
-//            executor.submit(adjPipeline);
-//        } catch (Throwable t) {
-//            t.printStackTrace();
-//        }
     }
 
     public boolean isEmbedded() { return embedded; }
