@@ -10,20 +10,21 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class GrpcServer {
-    private static final Logger logger = Logger.getLogger(org.example.grpc.GrpcServer.class.getName());
+    private static final Logger logger = Logger.getLogger(GrpcServer.class.getName());
     private final Server server;
 
     public GrpcServer(BindableService service, int port) {
         this.server = ServerBuilder.forPort(port)
-                // Added executor - otherwise runaway thread creation seen!
+                // Added executor pool - otherwise runaway thread creation seen!
                 .executor(Executors.newFixedThreadPool(16))
-                .addService(service).build();
+                .addService(service)
+                .build();
 
         try {
             this.server.start();
             logger.info("GrpcServer started, listening on " + port);
-        } catch (IOException var4) {
-            var4.printStackTrace();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -31,8 +32,8 @@ public class GrpcServer {
 
             try {
                 this.stop();
-            } catch (InterruptedException var2) {
-                var2.printStackTrace(System.err);
+            } catch (InterruptedException ie) {
+                ie.printStackTrace(System.err);
             }
 
             System.err.println("*** server shut down");
@@ -43,13 +44,11 @@ public class GrpcServer {
         if (this.server != null) {
             this.server.shutdown().awaitTermination(30L, TimeUnit.SECONDS);
         }
-
     }
 
     public void blockUntilShutdown() throws InterruptedException {
         if (this.server != null) {
             this.server.awaitTermination();
         }
-
     }
 }
