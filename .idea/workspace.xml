@@ -5,8 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="226c2075-f97e-4e81-a87e-cf570e78361e" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/startPlatform.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/GrpcServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/GrpcServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/OpenAccountPipeline.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/OpenAccountPipeline.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/OpenAccountEventSerializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/OpenAccountEventSerializer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/AccountService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/AccountService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/service.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/service.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/startLocal.sh" beforeDir="false" afterPath="$PROJECT_DIR$/startService.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -50,18 +55,19 @@
     <option name="showLibraryContents" value="true" />
     <option name="showMembers" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/myawn/Documents/GitHub/AccountService/src/main/resources&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.28390804&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;org.jetbrains.idea.maven.wizards.archetype.MavenCatalogsConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "/Users/myawn/Documents/GitHub/AccountService/src/main/resources",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.28390804",
+    "settings.editor.selected.configurable": "org.jetbrains.idea.maven.wizards.archetype.MavenCatalogsConfigurable"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/main/resources" />
@@ -91,7 +97,7 @@
     </configuration>
     <configuration name="org.hazelcast.msfdemo.acctsvc.service.AccountService" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="org.hazelcast.msfdemo.acctsvc.service.AccountService" />
-      <module name="AccountService" />
+      <module name="accountservice" />
       <option name="VM_PARAMETERS" value="-XX:+AlwaysPreTouch -XX:+UnlockDiagnosticVMOptions -XX:+DebugNonSafepoints" />
       <extension name="coverage">
         <pattern>
@@ -106,7 +112,7 @@
     <configuration name="startJar.sh" type="ShConfigurationType" temporary="true">
       <option name="SCRIPT_TEXT" value="" />
       <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
-      <option name="SCRIPT_PATH" value="$PROJECT_DIR$/startLocal.sh" />
+      <option name="SCRIPT_PATH" value="$PROJECT_DIR$/startService.sh" />
       <option name="SCRIPT_OPTIONS" value="" />
       <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
       <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />
@@ -118,9 +124,25 @@
       <envs />
       <method v="2" />
     </configuration>
+    <configuration name="startPlatform.sh" type="ShConfigurationType" temporary="true">
+      <option name="SCRIPT_TEXT" value="" />
+      <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
+      <option name="SCRIPT_PATH" value="$PROJECT_DIR$/startPlatform.sh" />
+      <option name="SCRIPT_OPTIONS" value="" />
+      <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
+      <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
+      <option name="INTERPRETER_PATH" value="/bin/zsh" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="EXECUTE_IN_TERMINAL" value="true" />
+      <option name="EXECUTE_SCRIPT_FILE" value="true" />
+      <envs />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Application.org.hazelcast.msfdemo.acctsvc.service.AccountService" />
+        <item itemvalue="Shell Script.startPlatform.sh" />
         <item itemvalue="Shell Script.startJar.sh" />
         <item itemvalue="Application.org.hazelcast.msfdemo.acctsvc.business.TEMPCompletionMapListenerFuture" />
       </list>
@@ -163,7 +185,14 @@
       <option name="project" value="LOCAL" />
       <updated>1679330240841</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Changes to support async handleEvent, other clean-up">
+      <created>1681239879207</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1681239879207</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -189,7 +218,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/AccountService.java</url>
-          <line>222</line>
+          <line>243</line>
           <option name="timeStamp" value="13" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">

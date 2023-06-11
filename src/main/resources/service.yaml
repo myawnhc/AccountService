@@ -4,6 +4,6 @@ service_name: account-service
 #grpc_hostname: acctsvc
 grpc_hostname: localhost
 grpc_port: 50051
-hz_mode: embedded
+hz_mode: client-server
 # hz_client_config only used when hz_mode is client-server
 hz_client_config: hazelcast-client.local.yaml

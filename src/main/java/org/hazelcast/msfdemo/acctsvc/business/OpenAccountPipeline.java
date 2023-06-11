@@ -30,6 +30,7 @@ import org.hazelcast.eventsourcing.sync.CompletionInfo;
 import org.hazelcast.msfdemo.acctsvc.domain.Account;
 import org.hazelcast.msfdemo.acctsvc.events.AccountEvent;
 import org.hazelcast.msfdemo.acctsvc.events.OpenAccountEvent;
+import org.hazelcast.msfdemo.acctsvc.events.OpenAccountEventSerializer;
 import org.hazelcast.msfdemo.acctsvc.service.AccountService;
 
 import java.math.BigDecimal;
@@ -67,6 +68,8 @@ public class OpenAccountPipeline implements Runnable {
             HazelcastInstance hazelcast = service.getHazelcastInstance();
             JobConfig jobConfig = new JobConfig();
             jobConfig.setName("AccountService.OpenAccount");
+            // registerSerializer only supports StreamSerializer 2nd argument
+            //jobConfig.registerSerializer(OpenAccountEvent.class, OpenAccountEventSerializer.class);
             for (URL url : dependencies)
                 jobConfig.addJar(url);
             hazelcast.getJet().newJob(createPipeline(), jobConfig);

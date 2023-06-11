@@ -18,6 +18,7 @@
 package org.hazelcast.msfdemo.acctsvc.events;
 
 import com.hazelcast.core.HazelcastJsonValue;
+import com.hazelcast.nio.serialization.StreamSerializer;
 import com.hazelcast.nio.serialization.compact.CompactReader;
 import com.hazelcast.nio.serialization.compact.CompactSerializer;
 import com.hazelcast.nio.serialization.compact.CompactWriter;
@@ -25,7 +26,9 @@ import com.hazelcast.org.json.JSONObject;
 
 import java.math.BigDecimal;
 
-public class OpenAccountEventSerializer implements CompactSerializer<OpenAccountEvent> {
+public class OpenAccountEventSerializer implements CompactSerializer<OpenAccountEvent>
+        //StreamSerializer<OpenAccountEvent>
+{
     @Override
     public OpenAccountEvent read(CompactReader compactReader) {
         String acctNumber = compactReader.readString("key");

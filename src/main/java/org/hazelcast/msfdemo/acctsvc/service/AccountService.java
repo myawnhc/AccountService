@@ -28,6 +28,7 @@ import org.hazelcast.eventsourcing.EventSourcingController;
 import org.hazelcast.eventsourcing.event.DomainObject;
 import org.hazelcast.eventsourcing.event.PartitionedSequenceKey;
 import org.hazelcast.eventsourcing.event.SourcedEvent;
+import org.hazelcast.eventsourcing.eventstore.EventStoreCompactionEvent;
 import org.hazelcast.eventsourcing.sync.CompletionInfo;
 import org.hazelcast.eventsourcing.sync.CompletionInfoCompactSerializer;
 import org.hazelcast.msfdemo.acctsvc.business.AccountAPIImpl;
@@ -35,9 +36,12 @@ import org.hazelcast.msfdemo.acctsvc.business.OpenAccountPipeline;
 import org.hazelcast.msfdemo.acctsvc.business.AdjustBalancePipeline;
 import org.hazelcast.msfdemo.acctsvc.configuration.ServiceConfig;
 import org.hazelcast.msfdemo.acctsvc.domain.Account;
+import org.hazelcast.msfdemo.acctsvc.events.AccountCompactionEvent;
 import org.hazelcast.msfdemo.acctsvc.events.AccountCompactionEventSerializer;
 import org.hazelcast.msfdemo.acctsvc.events.AccountEvent;
+import org.hazelcast.msfdemo.acctsvc.events.BalanceChangeEvent;
 import org.hazelcast.msfdemo.acctsvc.events.BalanceChangeEventSerializer;
+import org.hazelcast.msfdemo.acctsvc.events.OpenAccountEvent;
 import org.hazelcast.msfdemo.acctsvc.events.OpenAccountEventSerializer;
 
 import java.io.ByteArrayInputStream;
@@ -95,14 +99,31 @@ public class AccountService implements HazelcastInstanceAware {
                     .addSerializer(new OpenAccountEventSerializer())
                     .addSerializer(new CompletionInfoCompactSerializer());
 
-            System.out.println("Adding classes needed outside of pipelines via UserCodeDeployment");
-            config.getUserCodeDeploymentConfig().setEnabled(true)
-                    .addClass(PartitionedSequenceKey.class)
-                    .addClass(Account.class)
-                    .addClass(DomainObject.class)
-                    .addClass(SourcedEvent.class)
-                    .addClass(CompletionInfo.class)
-                    .addClass(CompletionInfo.Status.class);
+            // Now adding classes to member classpath; getting serialization conflicts
+            // because serialversionids don't match ... skip upload for now but may
+            // have to come back and resolve this for cloud deployment.
+//            System.out.println("Adding classes needed outside of pipelines via UserCodeDeployment");
+//            config.getUserCodeDeploymentConfig().setEnabled(true)
+//                    .addClass(PartitionedSequenceKey.class)
+//                    .addClass(Account.class)
+//                    .addClass(DomainObject.class)
+//                    .addClass(SourcedEvent.class)
+//                    .addClass(AccountEvent.class)
+//                    .addClass(AccountCompactionEvent.class)
+//                    .addClass(EventStoreCompactionEvent.class)
+//                    .addClass(OpenAccountEvent.class)
+//                    .addClass(BalanceChangeEvent.class)
+//                    .addClass(CompletionInfo.class)
+//                    .addClass(CompletionInfo.Status.class);
+
+
+                    // Adding to client config above doesn't make them visible
+                    // on the server side, so adding here as well
+//                    .addClass(OpenAccountEventSerializer.class)
+//                    .addClass(AccountCompactionEventSerializer.class)
+//                    .addClass(BalanceChangeEventSerializer.class)
+//                    .addClass(CompletionInfoCompactSerializer.class);
+
 
             System.out.println("AccountService starting Hazelcast Platform client with config from classpath");
             hazelcast = HazelcastClient.newHazelcastClient(config);
