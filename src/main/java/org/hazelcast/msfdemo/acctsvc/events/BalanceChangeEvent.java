@@ -17,8 +17,8 @@
 
 package org.hazelcast.msfdemo.acctsvc.events;
 
-import com.hazelcast.core.HazelcastJsonValue;
-import com.hazelcast.org.json.JSONObject;
+import com.hazelcast.nio.serialization.genericrecord.GenericRecord;
+import com.hazelcast.nio.serialization.genericrecord.GenericRecordBuilder;
 import com.hazelcast.sql.SqlRow;
 import org.hazelcast.msfdemo.acctsvc.domain.Account;
 
@@ -26,35 +26,60 @@ import java.math.BigDecimal;
 
 public class BalanceChangeEvent extends AccountEvent {
 
+    public static final String QUAL_EVENT_NAME = "AccountService.BalanceChangeEvent";
+    public static final String ACCT_NUM = "key";
+    public static final String BALANCE_CHANGE = "balanceChange";
+    public static final String CUSTOM_EVENT_NAME = "customEvent";
+
+    private BigDecimal balanceChange;
+    private String customEventName;
+
     public BalanceChangeEvent(String acctNumber, String eventName, BigDecimal change) {
+        setEventName(QUAL_EVENT_NAME);
         this.key = acctNumber;
-        this.eventClass = BalanceChangeEvent.class.getCanonicalName();
-        JSONObject jobj = new JSONObject();
-        jobj.put("balanceChange", change);
-        jobj.put("eventName", eventName);
-        setPayload(new HazelcastJsonValue(jobj.toString()));
+        this.customEventName = eventName;
+        this.balanceChange = change;
+    }
+
+    public BalanceChangeEvent(GenericRecord data) {
+        setEventName(QUAL_EVENT_NAME);
+        this.key = data.getString(ACCT_NUM);
+        this.customEventName = data.getString(CUSTOM_EVENT_NAME);
+        this.balanceChange = data.getDecimal(BALANCE_CHANGE);
     }
 
     public BalanceChangeEvent(SqlRow row) {
+        setEventName(QUAL_EVENT_NAME);
         this.key = row.getObject("key");
-        HazelcastJsonValue payload = row.getObject("payload");
-        setPayload(payload);
-        eventClass = BalanceChangeEvent.class.getCanonicalName();
-        setTimestamp(row.getObject("timestamp"));
+        this.customEventName = row.getObject(CUSTOM_EVENT_NAME);
+        this.balanceChange = row.getObject(BALANCE_CHANGE);
+        Long time = row.getObject(EVENT_TIME);
+        if (time != null)
+            setTimestamp(time);
     }
 
     @Override
     public Account apply(Account account) {
-        JSONObject jobj = new JSONObject(payload.getValue());
-        account.setBalance(account.getBalance().add(jobj.getBigDecimal("balanceChange")));
+        account.setBalance(account.getBalance().add(balanceChange));
         return account;
     }
 
+    public BigDecimal getBalanceChange() { return balanceChange; }
+    public String getCustomEventName() { return customEventName; }
+
     @Override
     public String toString() {
-        JSONObject jobj = new JSONObject(getPayload().getValue());
-        String eventName = jobj.getString("eventName");
-        BigDecimal amount = jobj.getBigDecimal("balanceChange");
-        return eventName + " " + key + " " + amount.toString();
+        return customEventName + " " + key + " " + balanceChange;
+    }
+
+    @Override
+    public GenericRecord toGenericRecord() {
+        GenericRecord gr = GenericRecordBuilder.compact(getEventName())
+                .setString(EVENT_NAME, QUAL_EVENT_NAME)
+                .setString(ACCT_NUM, key)
+                .setString(CUSTOM_EVENT_NAME, customEventName)
+                .setDecimal(BALANCE_CHANGE, balanceChange)
+                .build();
+        return gr;
     }
 }

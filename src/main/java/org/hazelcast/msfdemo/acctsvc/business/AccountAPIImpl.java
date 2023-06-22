@@ -13,15 +13,18 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package org.hazelcast.msfdemo.acctsvc.business;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.OperationTimeoutException;
 import com.hazelcast.map.IMap;
 import io.grpc.stub.StreamObserver;
 import org.example.grpc.APIBufferPair;
 import org.example.grpc.Arity;
+import org.hazelcast.eventsourcing.event.PartitionedSequenceKey;
+import org.hazelcast.eventsourcing.sync.CompletionInfo;
 import org.hazelcast.msfdemo.acctsvc.domain.Account;
+import org.hazelcast.msfdemo.acctsvc.events.AccountEvent;
 import org.hazelcast.msfdemo.acctsvc.events.AccountGrpc;
 import org.hazelcast.msfdemo.acctsvc.events.AccountOuterClass;
 import org.hazelcast.msfdemo.acctsvc.views.AccountDAO;
@@ -29,7 +32,9 @@ import org.hazelcast.msfdemo.acctsvc.views.AccountDAO;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
@@ -48,6 +53,21 @@ public class AccountAPIImpl extends AccountGrpc.AccountImplBase {
     APIBufferPair<OpenAccountRequest,OpenAccountResponse> openHandler;
     APIBufferPair<AdjustBalanceRequest,AdjustBalanceResponse> balanceAdjustHandler;
 
+    // Tracking for stuck operations.  Not currently in use but keeping around
+    //  in case it becomes useful (again) in the future.
+    private static final boolean TRACK_PENDING_OPS = false;
+    private static final int THRESHOLD_WARN = 10_000; // ms
+    private static final int THRESHOLD_FAIL = 60_000; // ms
+    class PendingOperation {
+        public String eventName;
+        public long timestamp;
+        public PendingOperation(String eventName) {
+            this.eventName = eventName;
+            this.timestamp = System.currentTimeMillis();
+        }
+    }
+    private Map<UUID, PendingOperation> pendingOperationMap = new HashMap<>();
+
 
     public AccountAPIImpl(HazelcastInstance hazelcast) {
         String serviceName = bindService().getServiceDescriptor().getName();
@@ -65,15 +85,68 @@ public class AccountAPIImpl extends AccountGrpc.AccountImplBase {
         bufferPairsForAPI.put("adjustBalance", balanceAdjustHandler);
 
         accountDAO = new AccountDAO(hazelcast);
+
+        //Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new CheckPendingOperations(hazelcast), 5, 5, TimeUnit.SECONDS);
+    }
+
+    // Schedule this to run at a fixed rate
+    private class CheckPendingOperations implements Runnable {
+        HazelcastInstance hazelcast;
+        IMap<PartitionedSequenceKey, AccountEvent> pendingEventsMap;
+        IMap<PartitionedSequenceKey, CompletionInfo> completionsMap;
+
+
+        public CheckPendingOperations(HazelcastInstance hz) {
+            this.hazelcast = hz;
+            // EventSourcingController allows these names to be overridden
+            // but since we aren't doing so we will hard-code the names here.
+            pendingEventsMap = hazelcast.getMap("account_PENDING");
+            completionsMap = hazelcast.getMap("account_COMPLETIONS");
+        }
+        @Override
+        public void run() {
+            int pendingCount = 0;
+            for (UUID identifier : pendingOperationMap.keySet()) {
+                pendingCount++;
+                PendingOperation op = pendingOperationMap.get(identifier);
+                long elapsed = System.currentTimeMillis() - op.timestamp;
+                if (elapsed > THRESHOLD_FAIL) {
+                    logger.warning(op.eventName + " item pending > " + THRESHOLD_FAIL + ", marking failed");
+                    // TODO: add 'cancel' or 'abort' in APIBufferPair
+                } else if (elapsed > THRESHOLD_WARN) {
+                    logger.warning(op.eventName + " item pending > " + THRESHOLD_WARN);
+                }
+
+            }
+            //if (pendingCount > 0)
+                logger.info(pendingCount + " operations pending");
+        }
+
+        private void find(UUID identifier, APIBufferPair handler) {
+            PartitionedSequenceKey stuckKey = null;
+            // Should be in PendingEvents
+
+            // Should be in Completions in an incomplete status
+            // Is the Request still queued?
+            // Is the Response object in the response map?
+        }
     }
 
 
     @Override
     public void open(OpenAccountRequest request, StreamObserver<OpenAccountResponse> responseObserver) {
         UUID identifier = UUID.randomUUID();
+        if (TRACK_PENDING_OPS)
+            pendingOperationMap.put(identifier, new PendingOperation("open"));
         openHandler.putUnaryRequest(identifier, request);
 
         OpenAccountResponse response = openHandler.getUnaryResponse(identifier);
+        if (TRACK_PENDING_OPS)
+            pendingOperationMap.remove(identifier);
+        if (response == null) {
+            responseObserver.onError(new OperationTimeoutException("OPEN operation timed out"));
+            return;
+        }
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
@@ -82,9 +155,17 @@ public class AccountAPIImpl extends AccountGrpc.AccountImplBase {
     public void deposit(AccountOuterClass.AdjustBalanceRequest request, StreamObserver<AccountOuterClass.AdjustBalanceResponse> responseObserver) {
         //logger.info("deposit requested " + request.getAccountNumber() + " " + request.getAmount());
         UUID identifier = UUID.randomUUID();
+        if (TRACK_PENDING_OPS)
+            pendingOperationMap.put(identifier, new PendingOperation("deposit"));
         balanceAdjustHandler.putUnaryRequest(identifier, request);
 
         AdjustBalanceResponse response = balanceAdjustHandler.getUnaryResponse(identifier);
+        if (TRACK_PENDING_OPS)
+            pendingOperationMap.remove(identifier);
+        if (response == null) {
+            responseObserver.onError(new OperationTimeoutException("DEPOSIT operation timed out"));
+            return;
+        }
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
@@ -93,6 +174,9 @@ public class AccountAPIImpl extends AccountGrpc.AccountImplBase {
     public void withdraw(AdjustBalanceRequest request, StreamObserver<AdjustBalanceResponse> responseObserver) {
         //System.out.println("withdrawal requested " + request.getAccountNumber() + " " + request.getAmount());
         UUID identifier = UUID.randomUUID();
+        if (TRACK_PENDING_OPS)
+            pendingOperationMap.put(identifier, new PendingOperation("withdraw"));
+
         // Flip the sign of the amount to make it a debit
         AdjustBalanceRequest modRequest = AdjustBalanceRequest.newBuilder(request)
                 .setAmount(-1 * request.getAmount())
@@ -100,6 +184,12 @@ public class AccountAPIImpl extends AccountGrpc.AccountImplBase {
         balanceAdjustHandler.putUnaryRequest(identifier, modRequest);
 
         AdjustBalanceResponse response = balanceAdjustHandler.getUnaryResponse(identifier);
+        if (TRACK_PENDING_OPS)
+            pendingOperationMap.remove(identifier);
+        if (response == null) {
+            responseObserver.onError(new OperationTimeoutException("WITHDRAW operation timed out"));
+            return;
+        }
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
@@ -226,7 +316,7 @@ public class AccountAPIImpl extends AccountGrpc.AccountImplBase {
         Collection<Account> accounts = accountDAO.getAllAccounts();
         List<String> accountNumbers = new ArrayList<>();
         for (Account a : accounts) {
-            accountNumbers.add(a.getAcctNumber());
+            accountNumbers.add(a.getAccountNumber());
         }
         AccountOuterClass.AllAccountsResponse.Builder responseBuilder = AccountOuterClass.AllAccountsResponse.newBuilder();
         responseBuilder.addAllAccountNumber(accountNumbers);

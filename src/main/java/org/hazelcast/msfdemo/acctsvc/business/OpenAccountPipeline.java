@@ -30,7 +30,6 @@ import org.hazelcast.eventsourcing.sync.CompletionInfo;
 import org.hazelcast.msfdemo.acctsvc.domain.Account;
 import org.hazelcast.msfdemo.acctsvc.events.AccountEvent;
 import org.hazelcast.msfdemo.acctsvc.events.OpenAccountEvent;
-import org.hazelcast.msfdemo.acctsvc.events.OpenAccountEventSerializer;
 import org.hazelcast.msfdemo.acctsvc.service.AccountService;
 
 import java.math.BigDecimal;
@@ -50,7 +49,7 @@ public class OpenAccountPipeline implements Runnable {
     private List<URL> dependencies;
 
     public OpenAccountPipeline(AccountService service, byte[] clientConfig, List<URL> dependentJars) {
-        System.out.println("OPA.<init> with cc " + clientConfig);
+        //System.out.println("OPA.<init> with cc " + clientConfig);
         OpenAccountPipeline.service = service;
         if (service == null)
             throw new IllegalArgumentException("Service cannot be null");
@@ -64,7 +63,7 @@ public class OpenAccountPipeline implements Runnable {
     @Override
     public void run() {
         try {
-            System.out.println("OpenAccountPipeline.run() invoked, submitting job");
+            //System.out.println("OpenAccountPipeline.run() invoked, submitting job");
             HazelcastInstance hazelcast = service.getHazelcastInstance();
             JobConfig jobConfig = new JobConfig();
             jobConfig.setName("AccountService.OpenAccount");
@@ -132,19 +131,15 @@ public class OpenAccountPipeline implements Runnable {
                             return service.getEventSourcingController();
                         }).toNonCooperative(); // Experimental change
 
-        // Can probably remove these - wasn't Jet threads that were the issue, but
-        // GrpcServer threads.  Fixed with a fixed thread pool in GrpcServer creation.
-        int concurrentOpsPerProcessor = 2; // 4 is default - ran out of native threads on laptop
-        boolean preserveOrder = false;
-
-        events.mapUsingServiceAsync(eventController, concurrentOpsPerProcessor,
-                        preserveOrder, (controller, tuple) -> {
+        events.mapUsingServiceAsync(eventController, (controller, tuple) -> {
             CompletableFuture<CompletionInfo> completion = controller.handleEvent(tuple.f1(), tuple.f0());
+            //System.out.println("OpenAccountPipeline awaiting " + completion);
             return completion;
         }).setName("Invoke EventSourcingController.handleEvent")
 
         // Send response back via GrpcSink
         .map(completion -> {
+            //System.out.println("  Completion satisfied");
             UUID uuid = completion.getUUID();
             OpenAccountEvent event = (OpenAccountEvent) completion.getEvent();
             String acctNumber = event.getKey();

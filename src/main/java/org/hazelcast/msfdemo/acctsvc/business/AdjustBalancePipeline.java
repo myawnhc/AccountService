@@ -16,15 +16,12 @@
 package org.hazelcast.msfdemo.acctsvc.business;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.HazelcastJsonValue;
-import com.hazelcast.flakeidgen.FlakeIdGenerator;
 import com.hazelcast.jet.config.JobConfig;
 import com.hazelcast.jet.datamodel.Tuple2;
 import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.ServiceFactories;
 import com.hazelcast.jet.pipeline.ServiceFactory;
 import com.hazelcast.jet.pipeline.StreamStage;
-import com.hazelcast.org.json.JSONObject;
 import org.example.grpc.GrpcConnector;
 import org.example.grpc.MessageWithUUID;
 import org.hazelcast.eventsourcing.EventSourcingController;
@@ -33,7 +30,6 @@ import org.hazelcast.msfdemo.acctsvc.events.AccountEvent;
 import org.hazelcast.msfdemo.acctsvc.events.BalanceChangeEvent;
 import org.hazelcast.msfdemo.acctsvc.service.AccountService;
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.util.List;
@@ -62,7 +58,7 @@ public class AdjustBalancePipeline implements Runnable {
     @Override
     public void run() {
         try {
-            System.out.println("AdjustBalancePipeline.run");
+            //System.out.println("AdjustBalancePipeline.run");
             HazelcastInstance hazelcast = service.getHazelcastInstance();
             JobConfig jobConfig = new JobConfig();
             jobConfig.setName("AccountService.AdjustBalance");
@@ -108,27 +104,26 @@ public class AdjustBalancePipeline implements Runnable {
 
         events.mapUsingServiceAsync(eventController, (controller, tuple) -> {
             // Returns CompletableFuture<CompletionInfo>
-            //System.out.println("AJP calls handleEvent with " + tuple.f0() + "," + tuple.f1());
+            //System.out.println("AdjustBalancePipeline calls handleEvent with " + tuple.f0() + "," + tuple.f1());
             return controller.handleEvent(tuple.f1(), tuple.f0());
-        })
+        }).setName("Send event to EventSourcingFramework async")
 
         // Send response back via GrpcSink
         .map(completion -> {
             UUID uuid = completion.getUUID();
+            //System.out.println("AdjustBalancePipeline received completion for " + uuid);
             BalanceChangeEvent event = (BalanceChangeEvent) completion.getEvent();
             //String acctNumber = event.getKey();
-            HazelcastJsonValue payload = event.getPayload();
-            JSONObject jobj = new JSONObject(payload.getValue());
-            BigDecimal balanceChange = jobj.getBigDecimal("balanceChange");
-            // Convert to cents as protobuf has no decimal type
+            BigDecimal balanceChange = event.getBalanceChange();
+            // Convert amount to cents as protobuf has no decimal type
             balanceChange = balanceChange.movePointRight(2);
-            //String eventName = jobj.getString("eventName");
+            //String eventName = event.getCustomEventName();
             AdjustBalanceResponse response = AdjustBalanceResponse.newBuilder()
                     .setNewBalance(balanceChange.intValue())
                     .build();
             MessageWithUUID<AdjustBalanceResponse> wrapped = new MessageWithUUID<>(uuid, response);
             return wrapped;
-        })
+        }).setName("Build AdjustBalanceResponse after return from ESF received")
         .writeTo(GrpcConnector.grpcUnarySink(SERVICE_NAME, METHOD_NAME))
                 .setName("Write response to GrpcSink");
 

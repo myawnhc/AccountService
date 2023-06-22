@@ -16,31 +16,47 @@
 
 package org.hazelcast.msfdemo.acctsvc.domain;
 
+import com.hazelcast.nio.serialization.genericrecord.GenericRecord;
+import com.hazelcast.nio.serialization.genericrecord.GenericRecordBuilder;
 import org.hazelcast.eventsourcing.event.DomainObject;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 
 public class Account implements DomainObject<String> {
 
     private BigDecimal balance;
-    private String acctNumber;
-    private String name;
+    private String accountNumber;
+    private String accountName;
 
     public Account() {}
 
+    public Account(GenericRecord fromGR) {
+        this.accountNumber = fromGR.getString("key");
+        this.accountName = fromGR.getString("accountName");
+        this.balance = fromGR.getDecimal("balance");
+    }
+
     @Override
     public String getKey() {
-        return acctNumber;
+        return accountNumber;
     }
 
     public BigDecimal getBalance() { return balance; }
     public void setBalance(BigDecimal value) { balance = value; }
 
-    public void setName(String name) { this.name = name; }
-    public String getName() { return name; }
+    public void setAccountName(String name) { this.accountName = name; }
+    public String getAccountName() { return accountName; }
 
-    public void setAcctNumber(String acctNum) { this.acctNumber = acctNum; }
-    public String getAcctNumber() { return this.acctNumber; }
+    public void setAccountNumber(String acctNum) { this.accountNumber = acctNum; }
+    public String getAccountNumber() { return this.accountNumber; }
+
+    public GenericRecord toGenericRecord() {
+        GenericRecord gr = GenericRecordBuilder.compact("AccountService.account")
+                .setString("key", accountNumber)
+                .setString("accountName", accountName)
+                .setDecimal("balance", balance)
+                .build();
+        return gr;
+    }
 
 }

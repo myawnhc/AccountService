@@ -17,13 +17,6 @@ hazelcast:
   properties:
     # This is not working but setting via system env variable HZ_USERCODEDEPLOYMENT_ENABLED=true does work ...
     hazelcast.user-code-deployment.enabled: true
-#  serialization:
-#    compact-serialization:
-#      serializers:
-#        - serializer: org.hazelcast.msfdemo.acctsvc.events.AccountCompactionEventSerializer
-#        - serializer: org.hazelcast.msfdemo.acctsvc.events.BalanceChangeEventSerializer
-#        - serializer: org.hazelcast.msfdemo.acctsvc.events.OpenAccountEventSerializer
-#        - serializer: org.hazelcast.eventsourcing.sync.CompletionInfoCompactSerializer
   jet:
     enabled: true
     resource-upload-enabled: true

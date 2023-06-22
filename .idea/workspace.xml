@@ -5,13 +5,25 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="226c2075-f97e-4e81-a87e-cf570e78361e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/startPlatform.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/domain/AccountHydrationFactory.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/AccountAPIImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/AccountAPIImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/AdjustBalancePipeline.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/AdjustBalancePipeline.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/OpenAccountPipeline.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/OpenAccountPipeline.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/OpenAccountEventSerializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/OpenAccountEventSerializer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/domain/Account.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/domain/Account.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/AccountCompactionEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/AccountCompactionEvent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/AccountCompactionEventSerializer.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/AccountEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/AccountEvent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/BalanceChangeEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/BalanceChangeEvent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/BalanceChangeEventSerializer.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/OpenAccountEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/OpenAccountEvent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/OpenAccountEventSerializer.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/AccountService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/AccountService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/views/AccountDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/views/AccountDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/hazelcast-client.local.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/hazelcast-client.local.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/hazelcast.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/hazelcast.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/service.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/service.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/startLocal.sh" beforeDir="false" afterPath="$PROJECT_DIR$/startService.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,7 +72,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "genericrecord",
     "last_opened_file_path": "/Users/myawn/Documents/GitHub/AccountService/src/main/resources",
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15",
@@ -74,11 +86,11 @@
       <recent name="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="org.hazelcast.msfdemo.acctsvc.domain" />
       <recent name="org.hazelcast.msfdemo.acctsvc.business" />
       <recent name="org.hazelcast.msfdemo.acctsvc.eventstore" />
       <recent name="org.hazelcast.msfdemo.acctsvc.views" />
       <recent name="org.hazelcast.msfdemo.acctsvc.events" />
-      <recent name="org.hazelcast.msfdemo.acctsvc.domain" />
     </key>
   </component>
   <component name="RunManager" selected="Application.org.hazelcast.msfdemo.acctsvc.service.AccountService">
@@ -218,13 +230,13 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/AccountService.java</url>
-          <line>243</line>
+          <line>192</line>
           <option name="timeStamp" value="13" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/OpenAccountEvent.java</url>
-          <line>49</line>
-          <option name="timeStamp" value="16" />
+          <url>file://$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/BalanceChangeEvent.java</url>
+          <line>51</line>
+          <option name="timeStamp" value="26" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

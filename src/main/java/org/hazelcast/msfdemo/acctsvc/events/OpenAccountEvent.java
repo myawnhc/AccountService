@@ -17,9 +17,8 @@
 
 package org.hazelcast.msfdemo.acctsvc.events;
 
-import com.hazelcast.core.HazelcastJsonValue;
 import com.hazelcast.nio.serialization.genericrecord.GenericRecord;
-import com.hazelcast.org.json.JSONObject;
+import com.hazelcast.nio.serialization.genericrecord.GenericRecordBuilder;
 import com.hazelcast.sql.SqlRow;
 import org.hazelcast.msfdemo.acctsvc.domain.Account;
 
@@ -27,30 +26,39 @@ import java.math.BigDecimal;
 
 public class OpenAccountEvent extends AccountEvent {
 
+    public static final String QUAL_EVENT_NAME = "AccountService.OpenAccountEvent";
+    public static final String ACCT_NUM = "key";
+    public static final String ACCT_NAME = "accountName";
+    public static final String INITIAL_BALANCE = "balance";
+
+    private String accountName;
+    private BigDecimal initialBalance;
+
     public OpenAccountEvent(String acctNumber, String acctName, BigDecimal initialBalance) {
+        setEventName(QUAL_EVENT_NAME);
         this.key = acctNumber;
-        this.eventClass = OpenAccountEvent.class.getCanonicalName();
-        JSONObject jobj = new JSONObject();
-        jobj.put("accountName", acctName);
-        jobj.put("initialBalance", initialBalance);
-        setPayload(new HazelcastJsonValue(jobj.toString()));
+        this.accountName = acctName;
+        this.initialBalance = initialBalance;
+    }
+
+    // Used in pipelines when getting events from PendingEvents or updating the
+    // materialized view
+    public OpenAccountEvent(GenericRecord data) {
+        setEventName(QUAL_EVENT_NAME);
+        this.key = data.getString(ACCT_NUM);
+        this.accountName = data.getString(ACCT_NAME);
+        this.initialBalance = data.getDecimal(INITIAL_BALANCE);
     }
 
     // Reconstruct an event from its SQL stored format
     public OpenAccountEvent(SqlRow row) {
-        this.key = row.getObject("key");
-        HazelcastJsonValue payload = row.getObject("payload");
-        setPayload(payload);
-        eventClass = OpenAccountEvent.class.getCanonicalName();
-        setTimestamp(row.getObject("timestamp"));
-    }
-
-    // EXPERIMENTAL
-    public OpenAccountEvent(GenericRecord record) {
-        this.key = record.getString("key");
-        this.eventClass = record.getString("eventClass");
-        this.payload = new HazelcastJsonValue(record.getString("payload"));
-        this.timestamp = record.getInt64("timestamp");
+        this.key = row.getObject("doKey");
+        this.eventName = QUAL_EVENT_NAME;
+        this.accountName = row.getObject(ACCT_NAME);
+        this.initialBalance = row.getObject(INITIAL_BALANCE);
+        Long time = row.getObject(EVENT_TIME);
+        if (time != null)
+            setTimestamp(time);
     }
 
     @Override
@@ -59,15 +67,25 @@ public class OpenAccountEvent extends AccountEvent {
         // entry for the account found when doing initial lookup
         if (account == null)
             account = new Account();
-        JSONObject jobj = new JSONObject(payload.getValue());
-        account.setAcctNumber(key);
-        account.setName(jobj.getString("accountName"));
-        account.setBalance(jobj.getBigDecimal("initialBalance"));
+        account.setAccountNumber(key);
+        account.setAccountName(accountName);
+        account.setBalance(initialBalance);
         return account;
     }
 
     @Override
     public String toString() {
         return "OpenAccountEvent " + key;
+    }
+
+    @Override
+    public GenericRecord toGenericRecord() {
+        GenericRecord gr = GenericRecordBuilder.compact(getEventName())
+                .setString(EVENT_NAME, QUAL_EVENT_NAME)
+                .setString(ACCT_NUM, key)
+                .setString(ACCT_NAME, accountName)
+                .setDecimal(INITIAL_BALANCE, initialBalance)
+                .build();
+        return gr;
     }
 }

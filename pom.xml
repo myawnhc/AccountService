@@ -11,6 +11,7 @@
     <properties>
         <maven.compiler.source>15</maven.compiler.source>
         <maven.compiler.target>15</maven.compiler.target>
+        <hazelcast-platform-version>5.3.0</hazelcast-platform-version>
     </properties>
 
     <dependencies>
@@ -19,6 +20,23 @@
             <groupId>com.github.myawnhc</groupId>
             <artifactId>AccountProto</artifactId>
             <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <!-- Hazelcast dependency specified here used when running in embedded mode -->
+        <dependency>
+            <!-- Enterprise required for SSL, which is needed to use Cloud Serverless -->
+            <!-- comes from hazelcast-ee repository defined below -->
+            <groupId>com.hazelcast</groupId>
+            <!--
+            <artifactId>hazelcast-enterprise</artifactId>
+            -->
+            <artifactId>hazelcast</artifactId>
+            <version>${hazelcast-platform-version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast-sql</artifactId>
+            <version>${hazelcast-platform-version}</version>
         </dependency>
         <!-- GrpcServer, Jet connectors for Grpc Source and Sink -->
         <dependency>

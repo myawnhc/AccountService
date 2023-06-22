@@ -17,8 +17,8 @@
 
 package org.hazelcast.msfdemo.acctsvc.events;
 
-import com.hazelcast.core.HazelcastJsonValue;
-import com.hazelcast.org.json.JSONObject;
+import com.hazelcast.nio.serialization.genericrecord.GenericRecord;
+import com.hazelcast.nio.serialization.genericrecord.GenericRecordBuilder;
 import com.hazelcast.sql.SqlRow;
 import org.hazelcast.eventsourcing.eventstore.EventStoreCompactionEvent;
 import org.hazelcast.msfdemo.acctsvc.domain.Account;
@@ -29,61 +29,71 @@ import java.math.BigDecimal;
 public class AccountCompactionEvent extends AccountEvent
         implements EventStoreCompactionEvent<Account>, Serializable {
 
-    private String accountNumber;
+    public static final String QUAL_EVENT_NAME = "AccountService.AccountCompactionEvent";
+    public static final String ACCT_NUM = "key";
+    public static final String ACCT_NAME = "accountName";
+    public static final String BALANCE = "balance";
+
+    //private String accountNumber;
     private String accountName;
     private BigDecimal balance;
 
     // Used to pass empty item into materialize that will get fields initialized from the
     // materialization process.  Considered experimental for now ...
     public AccountCompactionEvent() {
-        this.eventClass = AccountCompactionEvent.class.getCanonicalName();
-        JSONObject jobj = new JSONObject();
-        setPayload(new HazelcastJsonValue(jobj.toString()));
+        setEventName(QUAL_EVENT_NAME);
     }
 
     public AccountCompactionEvent(String acctNumber, String acctName, BigDecimal balance) {
+        setEventName(QUAL_EVENT_NAME);
         this.key = acctNumber;
-        this.eventClass = AccountCompactionEvent.class.getCanonicalName();
-        JSONObject jobj = new JSONObject();
-        jobj.put("accountName", acctName);
-        jobj.put("balance", balance);
-        setPayload(new HazelcastJsonValue(jobj.toString()));
+        this.accountName = acctName;
+        this.balance = balance;
+    }
+
+    public AccountCompactionEvent(GenericRecord data) {
+        setEventName(QUAL_EVENT_NAME);
+        this.key = data.getString(ACCT_NUM);
+        this.accountName = data.getString(ACCT_NAME);
+        this.balance = data.getDecimal(BALANCE);
     }
 
     public AccountCompactionEvent(SqlRow row) {
-        this.accountNumber = row.getObject("key");
-        this.key = accountNumber;
-        HazelcastJsonValue payload = row.getObject("payload");
-        JSONObject jobj = new JSONObject(payload.getValue());
-        this.accountName = jobj.getString("accountName");
-        this.balance = jobj.getBigDecimal("balance");
-        setPayload(payload);
-        eventClass = AccountCompactionEvent.class.getCanonicalName();
-        setTimestamp(row.getObject("timestamp"));
+        setEventName(QUAL_EVENT_NAME);
+        this.key = row.getObject("doKey");
+        this.accountName = row.getObject(ACCT_NAME);
+        this.balance = row.getObject(BALANCE);
     }
 
     @Override
     public Account apply(Account account) {
-        account.setAcctNumber(accountNumber);
-        account.setName(accountName);
+        account.setAccountNumber(key);
+        account.setAccountName(accountName);
         account.setBalance(balance);
         return account;
     }
 
     @Override
     public void initFromDomainObject(Account domainObject) {
-        this.accountNumber = domainObject.getAcctNumber();
-        this.key = accountNumber; // Required and easy to miss - maybe require on constructor instead?
-        this.accountName = domainObject.getName();
+        this.key = domainObject.getAccountNumber();
+        this.accountName = domainObject.getAccountName();
         this.balance = domainObject.getBalance();
-        JSONObject jobj = new JSONObject();
-        jobj.put("accountName", accountName);
-        jobj.put("balance", balance);
-        setPayload(new HazelcastJsonValue(jobj.toString()));
     }
 
     @Override
     public String toString() {
         return "AccountCompactionEvent " + key;
     }
+
+    @Override
+    public GenericRecord toGenericRecord() {
+        GenericRecord gr = GenericRecordBuilder.compact(getEventName())
+                .setString(EVENT_NAME, QUAL_EVENT_NAME)
+                .setString(ACCT_NUM, key)
+                .setString(ACCT_NAME, accountName)
+                .setDecimal(BALANCE, balance)
+                .build();
+        return gr;
+    }
+
 }

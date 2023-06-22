@@ -25,24 +25,13 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.map.IMap;
 import org.hazelcast.eventsourcing.EventSourcingController;
-import org.hazelcast.eventsourcing.event.DomainObject;
-import org.hazelcast.eventsourcing.event.PartitionedSequenceKey;
-import org.hazelcast.eventsourcing.event.SourcedEvent;
-import org.hazelcast.eventsourcing.eventstore.EventStoreCompactionEvent;
-import org.hazelcast.eventsourcing.sync.CompletionInfo;
-import org.hazelcast.eventsourcing.sync.CompletionInfoCompactSerializer;
 import org.hazelcast.msfdemo.acctsvc.business.AccountAPIImpl;
 import org.hazelcast.msfdemo.acctsvc.business.OpenAccountPipeline;
 import org.hazelcast.msfdemo.acctsvc.business.AdjustBalancePipeline;
 import org.hazelcast.msfdemo.acctsvc.configuration.ServiceConfig;
 import org.hazelcast.msfdemo.acctsvc.domain.Account;
-import org.hazelcast.msfdemo.acctsvc.events.AccountCompactionEvent;
-import org.hazelcast.msfdemo.acctsvc.events.AccountCompactionEventSerializer;
+import org.hazelcast.msfdemo.acctsvc.domain.AccountHydrationFactory;
 import org.hazelcast.msfdemo.acctsvc.events.AccountEvent;
-import org.hazelcast.msfdemo.acctsvc.events.BalanceChangeEvent;
-import org.hazelcast.msfdemo.acctsvc.events.BalanceChangeEventSerializer;
-import org.hazelcast.msfdemo.acctsvc.events.OpenAccountEvent;
-import org.hazelcast.msfdemo.acctsvc.events.OpenAccountEventSerializer;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -77,11 +66,6 @@ public class AccountService implements HazelcastInstanceAware {
             config.getJetConfig().setEnabled(true);
             config.getJetConfig().setResourceUploadEnabled(true);
             config.getMapConfig("account_PENDING").getEventJournalConfig().setEnabled(true);
-            config.getSerializationConfig().getCompactSerializationConfig()
-                    .addSerializer(new OpenAccountEventSerializer())
-                    .addSerializer(new BalanceChangeEventSerializer());
-            // NOTE: we may need additional configuration here!
-            config = EventSourcingController.addRequiredConfigItems(config);
             hazelcast = Hazelcast.newHazelcastInstance(config);
         } else {
             InputStream is = new ByteArrayInputStream(clientConfig);
@@ -92,43 +76,9 @@ public class AccountService implements HazelcastInstanceAware {
 //                config.getNetworkConfig().getSSLConfig().setEnabled(true).setProperties(sslProperties);
 //            }
 
-            // Doing programmatically for now since YAML marked invalid
-            config.getSerializationConfig().getCompactSerializationConfig()
-                    .addSerializer(new AccountCompactionEventSerializer())
-                    .addSerializer(new BalanceChangeEventSerializer())
-                    .addSerializer(new OpenAccountEventSerializer())
-                    .addSerializer(new CompletionInfoCompactSerializer());
-
-            // Now adding classes to member classpath; getting serialization conflicts
-            // because serialversionids don't match ... skip upload for now but may
-            // have to come back and resolve this for cloud deployment.
-//            System.out.println("Adding classes needed outside of pipelines via UserCodeDeployment");
-//            config.getUserCodeDeploymentConfig().setEnabled(true)
-//                    .addClass(PartitionedSequenceKey.class)
-//                    .addClass(Account.class)
-//                    .addClass(DomainObject.class)
-//                    .addClass(SourcedEvent.class)
-//                    .addClass(AccountEvent.class)
-//                    .addClass(AccountCompactionEvent.class)
-//                    .addClass(EventStoreCompactionEvent.class)
-//                    .addClass(OpenAccountEvent.class)
-//                    .addClass(BalanceChangeEvent.class)
-//                    .addClass(CompletionInfo.class)
-//                    .addClass(CompletionInfo.Status.class);
-
-
-                    // Adding to client config above doesn't make them visible
-                    // on the server side, so adding here as well
-//                    .addClass(OpenAccountEventSerializer.class)
-//                    .addClass(AccountCompactionEventSerializer.class)
-//                    .addClass(BalanceChangeEventSerializer.class)
-//                    .addClass(CompletionInfoCompactSerializer.class);
-
-
             System.out.println("AccountService starting Hazelcast Platform client with config from classpath");
             hazelcast = HazelcastClient.newHazelcastClient(config);
             System.out.println(" Target cluster: " + hazelcast.getConfig().getClusterName());
-
 
 //            // HZCE doesn't have GUI support for enabling Map Journal
 //            enableMapJournal(serviceName);
@@ -172,10 +122,10 @@ public class AccountService implements HazelcastInstanceAware {
         try {
             File esJar = new File("target/dependentJars/eventsourcing-1.0-SNAPSHOT.jar");
             URL es = esJar.toURI().toURL();
-            File grpcJar = new File("target/dependentJars/grpc-connectors-1.0-SNAPSHOT.jar");
-            URL grpc = grpcJar.toURI().toURL();
-            File protoJar = new File("target/dependentJars/AccountProto-1.0-SNAPSHOT.jar");
-            URL proto = protoJar.toURI().toURL();
+//            File grpcJar = new File("target/dependentJars/grpc-connectors-1.0-SNAPSHOT.jar");
+//            URL grpc = grpcJar.toURI().toURL();
+//            File protoJar = new File("target/dependentJars/AccountProto-1.0-SNAPSHOT.jar");
+//            URL proto = protoJar.toURI().toURL();
             File acctsvcJar = new File("target/accountservice-1.0-SNAPSHOT.jar");
             URL acctsvc = acctsvcJar.toURI().toURL();
             List<URL> dependencies = new ArrayList<>();
@@ -187,18 +137,17 @@ public class AccountService implements HazelcastInstanceAware {
             eventSourcingController = EventSourcingController
                     .<Account,String, AccountEvent>newBuilder(hazelcast, "account")
                     .addDependencies(dependencies)
+                    .hydrationFactory(new AccountHydrationFactory())
                     .build();
 
         } catch (MalformedURLException m) {
             m.printStackTrace();
         }
-
     }
 
     public EventSourcingController<Account,String, AccountEvent> getEventSourcingController() {
         return eventSourcingController;
     }
-
 
     private void initPipelines(HazelcastInstance hazelcast) {
         // Start the various Jet transaction handler pipelines
@@ -243,7 +192,6 @@ public class AccountService implements HazelcastInstanceAware {
         System.out.println("initService " + clientConfig);
         initHazelcast(false, clientConfig);
         initEventSourcingController(hazelcast);
-
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
