@@ -17,6 +17,7 @@ package org.hazelcast.msfdemo.acctsvc.views;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
+import com.hazelcast.nio.serialization.genericrecord.GenericRecord;
 import com.hazelcast.sql.SqlResult;
 import com.hazelcast.sql.SqlRow;
 import com.hazelcast.sql.SqlService;
@@ -24,22 +25,27 @@ import com.hazelcast.sql.SqlStatement;
 import org.hazelcast.msfdemo.acctsvc.domain.Account;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
 
 public class AccountDAO {
 
     private HazelcastInstance hazelcast;
-    private IMap<String,Account> accountMap;
+    private IMap<String, GenericRecord> accountMap;
 
     private final String CREATE_MAPPING  =
         """
-        CREATE MAPPING IF NOT EXISTS account_VIEW
+        CREATE MAPPING IF NOT EXISTS account_VIEW (
+            accountName   VARCHAR,
+            key           VARCHAR,
+            balance       DECIMAL  
+        )
         TYPE IMap
         Options (
             'keyFormat' = 'java',
             'keyJavaClass' = 'java.lang.String',
-            'valueFormat' = 'java',
-            'valueJavaClass' = 'org.hazelcast.msfdemo.acctsvc.domain.Account'
+            'valueFormat' = 'compact',
+            'valueCompactTypeName' = 'AccountService.account'
         )
         """;
 
@@ -52,11 +58,19 @@ public class AccountDAO {
 
     // Non-inheritable query methods
     public Account findByKey(String accountNumber) {
-        return accountMap.get(accountNumber);
+        GenericRecord data = accountMap.get(accountNumber);
+        return new Account(data);
     }
 
     public Collection<Account> getAllAccounts() {
-        return accountMap.values();
+        //return accountMap.values();
+        Collection<Account> accounts = new ArrayList<>();
+        Collection<GenericRecord> grs = accountMap.values();
+        for (GenericRecord gr : grs) {
+            Account a = new Account(gr);
+            accounts.add(a);
+        }
+        return accounts;
     }
 
     public BigDecimal getTotalAccountBalances() {
