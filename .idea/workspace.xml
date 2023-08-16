@@ -4,27 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="226c2075-f97e-4e81-a87e-cf570e78361e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/domain/AccountHydrationFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/AccountAPIImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/AccountAPIImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/AdjustBalancePipeline.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/AdjustBalancePipeline.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/OpenAccountPipeline.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/business/OpenAccountPipeline.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/domain/Account.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/domain/Account.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/AccountCompactionEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/AccountCompactionEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/AccountCompactionEventSerializer.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/AccountEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/AccountEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/BalanceChangeEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/BalanceChangeEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/BalanceChangeEventSerializer.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/OpenAccountEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/OpenAccountEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/events/OpenAccountEventSerializer.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/AccountService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/service/AccountService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/views/AccountDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/hazelcast/msfdemo/acctsvc/views/AccountDAO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/hazelcast-client.local.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/hazelcast-client.local.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/hazelcast.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/hazelcast.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/service.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/service.yaml" afterDir="false" />
-    </list>
+    <list default="true" id="226c2075-f97e-4e81-a87e-cf570e78361e" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -40,7 +20,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="master" />
+        <entry key="$PROJECT_DIR$" value="genericrecord" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -72,7 +52,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "genericrecord",
+    "git-widget-placeholder": "master",
     "last_opened_file_path": "/Users/myawn/Documents/GitHub/AccountService/src/main/resources",
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15",
@@ -153,10 +133,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.org.hazelcast.msfdemo.acctsvc.service.AccountService" />
         <item itemvalue="Shell Script.startPlatform.sh" />
         <item itemvalue="Shell Script.startJar.sh" />
+        <item itemvalue="Application.org.hazelcast.msfdemo.acctsvc.service.AccountService" />
         <item itemvalue="Application.org.hazelcast.msfdemo.acctsvc.business.TEMPCompletionMapListenerFuture" />
+        <item itemvalue="Shell Script.startPlatform.sh" />
       </list>
     </recent_temporary>
   </component>
