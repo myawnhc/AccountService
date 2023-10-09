@@ -13,6 +13,9 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="DependenciesAnalyzeManager">
+    <option name="forwardDirection" value="false" />
+  </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
@@ -188,7 +191,15 @@
       <option name="project" value="LOCAL" />
       <updated>1681239879207</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Update dependencies for CVEs">
+      <option name="closed" value="true" />
+      <created>1692276035280</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1692276035280</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -207,7 +218,8 @@
     <MESSAGE value="Exploratory work on completion tracking (will continue on a branch since this may not pan out)" />
     <MESSAGE value="Work on supporting client/server deployment model (incomplete)" />
     <MESSAGE value="Changes to support async handleEvent, other clean-up" />
-    <option name="LAST_COMMIT_MESSAGE" value="Changes to support async handleEvent, other clean-up" />
+    <MESSAGE value="Update dependencies for CVEs" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update dependencies for CVEs" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
