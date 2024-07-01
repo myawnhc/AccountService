@@ -211,7 +211,7 @@ public class AccountAPIImpl extends AccountGrpc.AccountImplBase {
             Exception e = new IllegalArgumentException("Account Number does not exist: :" + acctNumber);
             responseObserver.onError(e);
         } else {
-            System.out.println("Balance is " + account.getBalance());
+            logger.info("AccountAPIImpl.checkBalance: Balance is " + account.getBalance());
             int balanceInCents = account.getBalance().movePointRight(2).intValue();
             AccountOuterClass.CheckBalanceResponse response = AccountOuterClass.CheckBalanceResponse.newBuilder()
                     .setBalance(balanceInCents)
@@ -238,7 +238,7 @@ public class AccountAPIImpl extends AccountGrpc.AccountImplBase {
                     .build();
             responseObserver.onNext(response);
         }
-        System.out.println("Requested auth for " + request.getRequestedAmount() + ", balance is " +
+        logger.info("Requested auth for " + request.getRequestedAmount() + ", balance is " +
                 account.getBalance() + ", approved=" + approved);
         responseObserver.onCompleted();
     }

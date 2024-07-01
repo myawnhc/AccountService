@@ -9,9 +9,13 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>15</maven.compiler.source>
-        <maven.compiler.target>15</maven.compiler.target>
-        <hazelcast-platform-version>5.4.0-SNAPSHOT</hazelcast-platform-version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <hazelcast-platform-version>5.3.6</hazelcast-platform-version>
+        <my.main.class>org.hazelcast.msfdemo.acctsvc.service.AccountService</my.main.class>
+        <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
+        <maven-assembly-plugin.version>3.7.0</maven-assembly-plugin.version>
+        <docker-maven-plugin.version>0.44.0</docker-maven-plugin.version>
     </properties>
 
     <dependencies>
@@ -65,6 +69,7 @@
 
     <build>
         <plugins>
+            <!-- Support running service via mvn exec:java -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -77,37 +82,71 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>org.hazelcast.msfdemo.acctsvc.service.AccountService</mainClass>
+                    <executable>java</executable>
+                    <mainClass>${my.main.class}</mainClass>
                 </configuration>
             </plugin>
-<!--            &lt;!&ndash; make other module resources available locally so they can be uploaded through-->
-<!--         user code deployment and/or Jet JobConfig &ndash;&gt;-->
-<!--            <plugin>-->
-<!--                <artifactId>maven-remote-resources-plugin</artifactId>-->
-<!--                <version>3.0.0</version>-->
-<!--                <executions>-->
-<!--                    &lt;!&ndash;-->
-<!--                    <execution>-->
-<!--                        <goals>-->
-<!--                            <goal>bundle</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                    &ndash;&gt;-->
-<!--                    <execution>-->
-<!--                        <id>process-remote-resources</id>-->
-<!--                        <goals>-->
-<!--                            <goal>process</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <resourceBundles>-->
-<!--                                <resourceBundle>com.github.myawnhc:grpc-connectors:1.0-SNAPSHOT</resourceBundle>-->
-<!--                            </resourceBundles>-->
-<!--                            &lt;!&ndash; just to see if we pull anything &ndash;&gt;-->
-<!--                            <outputDirectory>remote-resource</outputDirectory>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
+
+            <!-- build jar with dependencies -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>${maven-assembly-plugin.version}</version>
+                <configuration>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <archive>
+                        <manifest>
+                            <mainClass>${my.main.class}</mainClass>
+                        </manifest>
+                        <manifestEntries>
+                            <Build-Timestamp>${maven.compiler.target}</Build-Timestamp>
+                        </manifestEntries>
+                    </archive>
+                    <attach>false</attach>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <finalName>${project.artifactId}-${project.version}-with-dependencies</finalName>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Build docker image -->
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>${docker-maven-plugin.version}</version>
+                <configuration>
+                    <images>
+                        <image>
+                            <name>msf/account.service</name>
+                            <build>
+                                <contextDir>${project.basedir}</contextDir>
+                                <args>
+                                    <JAR_FILE>${project.artifactId}-${project.version}-with-dependencies.jar}</JAR_FILE>
+                                </args>
+                            </build>
+                        </image>
+                    </images>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <id>default</id>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
 
         <resources>

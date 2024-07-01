@@ -27,9 +27,9 @@ import java.math.BigDecimal;
 public class OpenAccountEvent extends AccountEvent {
 
     public static final String QUAL_EVENT_NAME = "AccountService.OpenAccountEvent";
-    public static final String ACCT_NUM = "key";
-    public static final String ACCT_NAME = "accountName";
-    public static final String INITIAL_BALANCE = "balance";
+//    public static final String ACCT_NUM = "key";
+//    public static final String ACCT_NAME = "accountName";
+//    public static final String INITIAL_BALANCE = "balance";
 
     private String accountName;
     private BigDecimal initialBalance;
@@ -45,31 +45,39 @@ public class OpenAccountEvent extends AccountEvent {
     // materialized view
     public OpenAccountEvent(GenericRecord data) {
         setEventName(QUAL_EVENT_NAME);
-        this.key = data.getString(ACCT_NUM);
-        this.accountName = data.getString(ACCT_NAME);
-        this.initialBalance = data.getDecimal(INITIAL_BALANCE);
+        this.key = data.getString(Account.FIELD_ACCT_NUM);
+        this.accountName = data.getString(Account.FIELD_ACCT_NAME);
+        this.initialBalance = data.getDecimal(Account.FIELD_BALANCE);
     }
 
     // Reconstruct an event from its SQL stored format
     public OpenAccountEvent(SqlRow row) {
-        this.key = row.getObject("doKey");
+        this.key = row.getObject("doKey"); // SQL name differs from GenericRecord name.
         this.eventName = QUAL_EVENT_NAME;
-        this.accountName = row.getObject(ACCT_NAME);
-        this.initialBalance = row.getObject(INITIAL_BALANCE);
+        this.accountName = row.getObject(Account.FIELD_ACCT_NAME);
+        this.initialBalance = row.getObject(Account.FIELD_BALANCE);
         Long time = row.getObject(EVENT_TIME);
         if (time != null)
             setTimestamp(time);
     }
 
     @Override
-    public Account apply(Account account) {
+    public GenericRecord apply(GenericRecord account) {
         // When called from pipeline we will be passed null as there is no
         // entry for the account found when doing initial lookup
-        if (account == null)
-            account = new Account();
-        account.setAccountNumber(key);
-        account.setAccountName(accountName);
-        account.setBalance(initialBalance);
+        if (account == null) {
+            account = GenericRecordBuilder.compact("AccountService.account")
+                    .setString(Account.FIELD_ACCT_NUM, key)
+                    .setString(Account.FIELD_ACCT_NAME, accountName)
+                    .setDecimal(Account.FIELD_BALANCE, initialBalance)
+                    .build();
+        } else {
+            account = account.newBuilderWithClone()
+                    .setString(Account.FIELD_ACCT_NUM, key)
+                    .setString(Account.FIELD_ACCT_NAME, accountName)
+                    .setDecimal(Account.FIELD_BALANCE, initialBalance)
+                    .build();
+        }
         return account;
     }
 
@@ -82,9 +90,9 @@ public class OpenAccountEvent extends AccountEvent {
     public GenericRecord toGenericRecord() {
         GenericRecord gr = GenericRecordBuilder.compact(getEventName())
                 .setString(EVENT_NAME, QUAL_EVENT_NAME)
-                .setString(ACCT_NUM, key)
-                .setString(ACCT_NAME, accountName)
-                .setDecimal(INITIAL_BALANCE, initialBalance)
+                .setString(Account.FIELD_ACCT_NUM, key)
+                .setString(Account.FIELD_ACCT_NAME, accountName)
+                .setDecimal(Account.FIELD_BALANCE, initialBalance)
                 .build();
         return gr;
     }

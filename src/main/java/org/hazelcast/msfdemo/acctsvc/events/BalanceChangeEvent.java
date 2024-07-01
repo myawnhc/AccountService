@@ -27,8 +27,8 @@ import java.math.BigDecimal;
 public class BalanceChangeEvent extends AccountEvent {
 
     public static final String QUAL_EVENT_NAME = "AccountService.BalanceChangeEvent";
-    public static final String ACCT_NUM = "key";
-    public static final String BALANCE_CHANGE = "balanceChange";
+//    public static final String ACCT_NUM = "key";
+//    public static final String BALANCE_CHANGE = "balanceChange";
     public static final String CUSTOM_EVENT_NAME = "customEvent";
 
     private BigDecimal balanceChange;
@@ -43,24 +43,25 @@ public class BalanceChangeEvent extends AccountEvent {
 
     public BalanceChangeEvent(GenericRecord data) {
         setEventName(QUAL_EVENT_NAME);
-        this.key = data.getString(ACCT_NUM);
+        this.key = data.getString(Account.FIELD_ACCT_NUM);
         this.customEventName = data.getString(CUSTOM_EVENT_NAME);
-        this.balanceChange = data.getDecimal(BALANCE_CHANGE);
+        this.balanceChange = data.getDecimal(Account.FIELD_BALANCE);
     }
 
     public BalanceChangeEvent(SqlRow row) {
         setEventName(QUAL_EVENT_NAME);
-        this.key = row.getObject("key");
+        this.key = row.getObject(Account.FIELD_ACCT_NUM);
         this.customEventName = row.getObject(CUSTOM_EVENT_NAME);
-        this.balanceChange = row.getObject(BALANCE_CHANGE);
+        this.balanceChange = row.getObject(Account.FIELD_BALANCE);
         Long time = row.getObject(EVENT_TIME);
         if (time != null)
             setTimestamp(time);
     }
 
     @Override
-    public Account apply(Account account) {
-        account.setBalance(account.getBalance().add(balanceChange));
+    public GenericRecord apply(GenericRecord account) {
+        BigDecimal newBalance = account.getDecimal(Account.FIELD_BALANCE).add(balanceChange);
+        account = account.newBuilderWithClone().setDecimal(Account.FIELD_BALANCE, newBalance).build();
         return account;
     }
 
@@ -76,9 +77,9 @@ public class BalanceChangeEvent extends AccountEvent {
     public GenericRecord toGenericRecord() {
         GenericRecord gr = GenericRecordBuilder.compact(getEventName())
                 .setString(EVENT_NAME, QUAL_EVENT_NAME)
-                .setString(ACCT_NUM, key)
+                .setString(Account.FIELD_ACCT_NUM, key)
                 .setString(CUSTOM_EVENT_NAME, customEventName)
-                .setDecimal(BALANCE_CHANGE, balanceChange)
+                .setDecimal(Account.FIELD_BALANCE, balanceChange)
                 .build();
         return gr;
     }

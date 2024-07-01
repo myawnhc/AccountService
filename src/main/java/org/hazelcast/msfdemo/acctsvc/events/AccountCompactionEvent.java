@@ -27,7 +27,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 public class AccountCompactionEvent extends AccountEvent
-        implements EventStoreCompactionEvent<Account>, Serializable {
+        implements EventStoreCompactionEvent, Serializable {
 
     public static final String QUAL_EVENT_NAME = "AccountService.AccountCompactionEvent";
     public static final String ACCT_NUM = "key";
@@ -66,18 +66,18 @@ public class AccountCompactionEvent extends AccountEvent
     }
 
     @Override
-    public Account apply(Account account) {
-        account.setAccountNumber(key);
-        account.setAccountName(accountName);
-        account.setBalance(balance);
-        return account;
+    public GenericRecord apply(GenericRecord account) {
+        BigDecimal previousBalance = account.getDecimal(Account.FIELD_BALANCE);
+        if (previousBalance != null)
+            this.balance = this.balance.add(previousBalance);
+        return this.toGenericRecord();
     }
 
     @Override
-    public void initFromDomainObject(Account domainObject) {
-        this.key = domainObject.getAccountNumber();
-        this.accountName = domainObject.getAccountName();
-        this.balance = domainObject.getBalance();
+    public void initFromGenericRecord(GenericRecord domainObject) {
+        this.key = domainObject.getString(Account.FIELD_ACCT_NUM);
+        this.accountName = domainObject.getString(Account.FIELD_ACCT_NAME);
+        this.balance = domainObject.getDecimal(Account.FIELD_BALANCE);
     }
 
     @Override
@@ -95,5 +95,4 @@ public class AccountCompactionEvent extends AccountEvent
                 .build();
         return gr;
     }
-
 }

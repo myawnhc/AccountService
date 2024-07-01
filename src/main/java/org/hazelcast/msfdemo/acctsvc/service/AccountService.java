@@ -23,6 +23,7 @@ import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
+import com.hazelcast.cp.ISemaphore;
 import com.hazelcast.map.IMap;
 import org.hazelcast.eventsourcing.EventSourcingController;
 import org.hazelcast.msfdemo.acctsvc.business.AccountAPIImpl;
@@ -45,13 +46,59 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 public class AccountService implements HazelcastInstanceAware {
 
+    public static final String PIPELINE_SYNC_SEM = "AcccountService.PipelineInit.Semaphore";
     private HazelcastInstance hazelcast;
     private EventSourcingController<Account,String, AccountEvent> eventSourcingController;
     private boolean embedded;
     private byte[] clientConfig;
+
+    private static final Logger logger = Logger.getLogger(AccountService.class.getName());
+
+    private static AccountService theService;
+    private static AccountAPIImpl theAPIEndpoint;
+
+    private AccountService() {}
+
+    /* Note that despite efforts to make AccountService a singleton, the Jet classloader
+       architecture is causing us to get a service per pipeline, as each pipeline has its
+       own classloader.  With refactored completion tracking this is no longer causing an
+       issue but we might revisit - perhaps we can force service into root classloader?
+     */
+    public static AccountService getInstance(ServiceInitRequest request) {
+        logger.info("getInstance entry by thread " + Thread.currentThread().getId());
+        if (theService == null) {
+            logger.info("AccountService.getInstance initializing new AccountService instance");
+            if (request == null)
+                throw new IllegalArgumentException("ServiceInitRequest cannot be null when instance being created");
+            theService = new AccountService();
+            if (request.initHazelcast == ServiceInitRequest.HazelcastInitType.CLIENT_SERVER) {
+                byte[] clientConfig = request.clientConfig;
+                theService.initHazelcast(false, clientConfig);
+            } else if (request.initHazelcast == ServiceInitRequest.HazelcastInitType.EMBEDDED)
+                theService.initHazelcast(true, null);
+            else if (request.useExistingHazelcastInstance)
+                theService.hazelcast = request.getHazelcastInstance();
+            if (request.initEventSourcingController)
+                theService.initEventSourcingController(theService.hazelcast);
+            if (request.initAPIEndpoint) {
+                theAPIEndpoint = new AccountAPIImpl(theService.hazelcast);
+                logger.info("AccountService.getInstance has initialized theAPIEndpoint");
+            }
+            if (request.initPipelines)
+                theService.initPipelines(theService.getHazelcastInstance());
+        } else {
+            logger.info("AccountService.getInstance returning existing AccountService instance");
+        }
+
+        return theService;
+    }
+
+    // When in client/server mode. pipelines need access to service object, and we need
+    // to ensure there is only one cluster-wide.
 
     private void initHazelcast(boolean isEmbedded, byte[] clientConfig) {
         this.embedded = isEmbedded;
@@ -68,8 +115,11 @@ public class AccountService implements HazelcastInstanceAware {
             config.getMapConfig("account_PENDING").getEventJournalConfig().setEnabled(true);
             hazelcast = Hazelcast.newHazelcastInstance(config);
         } else {
+            System.out.println("AccountService.initHazelcast for client/server");
             InputStream is = new ByteArrayInputStream(clientConfig);
+            //System.out.println("ClientConfig as inputstream " + is);
             ClientConfig config = new YamlClientConfigBuilder(is).build();
+            //System.out.println("ClientConfig as object " + config);
 
 //            if (sslProperties != null) {
 //                System.out.println("Setting SSL properties programmatically");
@@ -79,6 +129,12 @@ public class AccountService implements HazelcastInstanceAware {
             System.out.println("AccountService starting Hazelcast Platform client with config from classpath");
             hazelcast = HazelcastClient.newHazelcastClient(config);
             System.out.println(" Target cluster: " + hazelcast.getConfig().getClusterName());
+
+            // Just checking ...
+//            ConfirmKeyClassVisibility test = new ConfirmKeyClassVisibility();
+//            IExecutorService ies = hazelcast.getExecutorService("test");
+//            ies.submit(test);
+//            System.out.println(" Sent class visibility checker to cluster");
 
 //            // HZCE doesn't have GUI support for enabling Map Journal
 //            enableMapJournal(serviceName);
@@ -129,7 +185,7 @@ public class AccountService implements HazelcastInstanceAware {
             File acctsvcJar = new File("target/accountservice-1.0-SNAPSHOT.jar");
             URL acctsvc = acctsvcJar.toURI().toURL();
             List<URL> dependencies = new ArrayList<>();
-            dependencies.add(es);
+            //dependencies.add(es);
             //dependencies.add(grpc);
             //dependencies.add(proto);
             dependencies.add(acctsvc);
@@ -163,16 +219,21 @@ public class AccountService implements HazelcastInstanceAware {
             File acctsvcJar = new File("target/accountservice-1.0-SNAPSHOT.jar");
             URL acctsvc = acctsvcJar.toURI().toURL();
             List<URL> dependencies = new ArrayList<>();
-            dependencies.add(es);
-            dependencies.add(grpc);
+//            dependencies.add(es);
+//            dependencies.add(grpc);
             dependencies.add(proto);
             dependencies.add(acctsvc);
+
+            logger.info("Begin pipeline client-side init");
+            ISemaphore semaphore = hazelcast.getCPSubsystem().getSemaphore(AccountService.PIPELINE_SYNC_SEM);
+            semaphore.init(1);
 
             OpenAccountPipeline openPipeline = new OpenAccountPipeline(this, cc, dependencies);
             executor.submit(openPipeline);
 
             AdjustBalancePipeline adjPipeline = new AdjustBalancePipeline(this, cc, dependencies);
             executor.submit(adjPipeline);
+            logger.info("End pipeline client-side init");
 
         } catch (Throwable t) {
             t.printStackTrace();
@@ -187,7 +248,7 @@ public class AccountService implements HazelcastInstanceAware {
         return hazelcast;
     }
 
-    // called from pipeline
+    // previously called from pipeline; now unused
     public void initService(byte[] clientConfig) {
         System.out.println("initService " + clientConfig);
         initHazelcast(false, clientConfig);
@@ -196,16 +257,23 @@ public class AccountService implements HazelcastInstanceAware {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         ServiceConfig.ServiceProperties props = ServiceConfig.get("account-service");
-        AccountService acctService = new AccountService();
-        acctService.initHazelcast(props.isEmbedded(), props.getClientConfig());
 
-        // Need service initialized before pipelines (APIBufferPairs)
-        AccountAPIImpl serviceImpl = new AccountAPIImpl(acctService.getHazelcastInstance());
-        //acctService.initEventStore(acctService.getHazelcastInstance());
-        acctService.initEventSourcingController(acctService.getHazelcastInstance());
-        acctService.initPipelines(acctService.getHazelcastInstance());
+        ServiceInitRequest.HazelcastInitType mode = ServiceInitRequest.HazelcastInitType.CLIENT_SERVER;
+        if (props.isEmbedded())
+            mode = ServiceInitRequest.HazelcastInitType.EMBEDDED;
 
-        final GrpcServer server = new GrpcServer(serviceImpl, props.getGrpcPort());
+        ServiceInitRequest initRequest = new ServiceInitRequest()
+                .setClientConfig(props.getClientConfig())
+                .initHazelcast(mode)
+                .initEventSourcingController()
+                .initAPIEndpoint()
+                .initPipelines();
+
+        // getInstance initializes static theService & theAPIEndpoint members
+        AccountService unused = getInstance(initRequest);
+        logger.info("initialized AccountService " + unused);
+
+        final GrpcServer server = new GrpcServer(theAPIEndpoint, props.getGrpcPort());
         server.blockUntilShutdown();
     }
 

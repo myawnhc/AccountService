@@ -28,12 +28,15 @@ public class Account implements DomainObject<String> {
     private String accountNumber;
     private String accountName;
 
+    public final static String FIELD_ACCT_NUM = "key";
+    public final static String FIELD_ACCT_NAME = "accountName";
+    public final static String FIELD_BALANCE = "balance";
     public Account() {}
 
     public Account(GenericRecord fromGR) {
-        this.accountNumber = fromGR.getString("key");
-        this.accountName = fromGR.getString("accountName");
-        this.balance = fromGR.getDecimal("balance");
+        this.accountNumber = fromGR.getString(FIELD_ACCT_NUM);
+        this.accountName = fromGR.getString(FIELD_ACCT_NAME);
+        this.balance = fromGR.getDecimal(FIELD_BALANCE);
     }
 
     @Override
@@ -52,9 +55,9 @@ public class Account implements DomainObject<String> {
 
     public GenericRecord toGenericRecord() {
         GenericRecord gr = GenericRecordBuilder.compact("AccountService.account")
-                .setString("key", accountNumber)
-                .setString("accountName", accountName)
-                .setDecimal("balance", balance)
+                .setString(FIELD_ACCT_NUM, accountNumber)
+                .setString(FIELD_ACCT_NAME, accountName)
+                .setDecimal(FIELD_BALANCE, balance)
                 .build();
         return gr;
     }

@@ -16,6 +16,7 @@
 package org.hazelcast.msfdemo.acctsvc.business;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.cp.ISemaphore;
 import com.hazelcast.flakeidgen.FlakeIdGenerator;
 import com.hazelcast.jet.config.JobConfig;
 import com.hazelcast.jet.datamodel.Tuple2;
@@ -31,6 +32,7 @@ import org.hazelcast.msfdemo.acctsvc.domain.Account;
 import org.hazelcast.msfdemo.acctsvc.events.AccountEvent;
 import org.hazelcast.msfdemo.acctsvc.events.OpenAccountEvent;
 import org.hazelcast.msfdemo.acctsvc.service.AccountService;
+import org.hazelcast.msfdemo.acctsvc.service.ServiceInitRequest;
 
 import java.math.BigDecimal;
 import java.net.URL;
@@ -38,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
 
 import static com.hazelcast.jet.datamodel.Tuple2.tuple2;
 import static org.hazelcast.msfdemo.acctsvc.events.AccountOuterClass.OpenAccountRequest;
@@ -47,32 +50,26 @@ public class OpenAccountPipeline implements Runnable {
 
     private static AccountService service;
     private List<URL> dependencies;
+    private static final Logger logger = Logger.getLogger(OpenAccountPipeline.class.getName());
 
     public OpenAccountPipeline(AccountService service, byte[] clientConfig, List<URL> dependentJars) {
-        //System.out.println("OPA.<init> with cc " + clientConfig);
         OpenAccountPipeline.service = service;
         if (service == null)
             throw new IllegalArgumentException("Service cannot be null");
-        // When running in client/server mode, service won't be initialized yet
-        if (service.getEventSourcingController() == null && clientConfig != null) {
-            service.initService(clientConfig);
-        }
         this.dependencies = dependentJars;
     }
 
     @Override
     public void run() {
         try {
-            //System.out.println("OpenAccountPipeline.run() invoked, submitting job");
             HazelcastInstance hazelcast = service.getHazelcastInstance();
             JobConfig jobConfig = new JobConfig();
             jobConfig.setName("AccountService.OpenAccount");
-            // registerSerializer only supports StreamSerializer 2nd argument
-            //jobConfig.registerSerializer(OpenAccountEvent.class, OpenAccountEventSerializer.class);
-            for (URL url : dependencies)
+            for (URL url : dependencies) {
                 jobConfig.addJar(url);
+                logger.info("OpenAccountPipeline job config adding " + url);
+            }
             hazelcast.getJet().newJob(createPipeline(), jobConfig);
-
         } catch (Exception e) { // Happens if our pipeline is not valid
             e.printStackTrace();
         }
@@ -83,7 +80,6 @@ public class OpenAccountPipeline implements Runnable {
 
         final String SERVICE_NAME = "account.Account";
         final String METHOD_NAME = "open";
-        //AccountService service = OpenAccountPipeline.service;
 
         StreamStage<MessageWithUUID<OpenAccountRequest>> requests =
                 p.readFrom(GrpcConnector.<OpenAccountRequest>grpcUnarySource(SERVICE_NAME, METHOD_NAME))
@@ -121,15 +117,16 @@ public class OpenAccountPipeline implements Runnable {
                         // In C/S config, service is uninitialized!
                         (ctx) -> {
                             if (service == null) {
-                                System.out.println("**** ESC service factory needs to initialize service");
+                                logger.info("OpenAccountPipeline service factory needs to get or initialize service");
                                 Map<String,Object> configMap = (Map<String, Object>) ctx.hazelcastInstance().getMap("ServiceConfig").get("AccountService");
-                                byte[] clientConfig = (byte[]) configMap.get("clientConfig");
-                                service = new AccountService();
-                                service.initService(clientConfig);
-                                System.out.println("service initialized from configmap");
+                                //byte[] clientConfig = (byte[]) configMap.get("clientConfig");
+                                ServiceInitRequest initRequest = new ServiceInitRequest()
+                                        .setHazelcastInstance(ctx.hazelcastInstance())
+                                        .initEventSourcingController();
+                                service = AccountService.getInstance(initRequest);
                             }
                             return service.getEventSourcingController();
-                        }).toNonCooperative(); // Experimental change
+                        });
 
         events.mapUsingServiceAsync(eventController, (controller, tuple) -> {
             CompletableFuture<CompletionInfo> completion = controller.handleEvent(tuple.f1(), tuple.f0());
@@ -139,16 +136,13 @@ public class OpenAccountPipeline implements Runnable {
 
         // Send response back via GrpcSink
         .map(completion -> {
-            //System.out.println("  Completion satisfied");
             UUID uuid = completion.getUUID();
-            OpenAccountEvent event = (OpenAccountEvent) completion.getEvent();
-            String acctNumber = event.getKey();
+            //OpenAccountEvent event = (OpenAccountEvent) completion.getEvent();
+            String acctNumber = (String) completion.getEventKey();
             OpenAccountResponse response = OpenAccountResponse.newBuilder()
                     .setAccountNumber(acctNumber)
                     .build();
             MessageWithUUID<OpenAccountResponse> wrapped = new MessageWithUUID<>(uuid, response);
-            if (uuid == null) System.err.println("** NULL UUID");
-            else if (acctNumber == null) System.err.println("** NULL acctNumber");
             return wrapped;
         }).setName("Build OpenAccountResponse")
         .writeTo(GrpcConnector.grpcUnarySink(SERVICE_NAME, METHOD_NAME))

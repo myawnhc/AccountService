@@ -16,12 +16,14 @@
 package org.hazelcast.msfdemo.acctsvc.business;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.cp.ISemaphore;
 import com.hazelcast.jet.config.JobConfig;
 import com.hazelcast.jet.datamodel.Tuple2;
 import com.hazelcast.jet.pipeline.Pipeline;
 import com.hazelcast.jet.pipeline.ServiceFactories;
 import com.hazelcast.jet.pipeline.ServiceFactory;
 import com.hazelcast.jet.pipeline.StreamStage;
+import com.hazelcast.nio.serialization.genericrecord.GenericRecord;
 import org.example.grpc.GrpcConnector;
 import org.example.grpc.MessageWithUUID;
 import org.hazelcast.eventsourcing.EventSourcingController;
@@ -29,11 +31,14 @@ import org.hazelcast.msfdemo.acctsvc.domain.Account;
 import org.hazelcast.msfdemo.acctsvc.events.AccountEvent;
 import org.hazelcast.msfdemo.acctsvc.events.BalanceChangeEvent;
 import org.hazelcast.msfdemo.acctsvc.service.AccountService;
+import org.hazelcast.msfdemo.acctsvc.service.ServiceInitRequest;
 
 import java.math.BigDecimal;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import static com.hazelcast.jet.datamodel.Tuple2.tuple2;
 import static org.hazelcast.msfdemo.acctsvc.events.AccountOuterClass.AdjustBalanceRequest;
@@ -43,15 +48,17 @@ public class AdjustBalancePipeline implements Runnable {
 
     private static AccountService service;
     private List<URL> dependencies;
+    private static final Logger logger = Logger.getLogger(AdjustBalancePipeline.class.getName());
 
     public AdjustBalancePipeline(AccountService service, byte[] clientConfig, List<URL> dependentJars) {
         AdjustBalancePipeline.service = service;
         if (service == null)
             throw new IllegalArgumentException("Service cannot be null");
         // When running in client/server mode, service won't be initialized yet
-        if (service.getEventSourcingController() == null && clientConfig != null) {
-            service.initService(clientConfig);
-        }
+//        if (service.getEventSourcingController() == null && clientConfig != null) {
+//            logger.info("*** ABPipeline inits service in constructor");
+//            service.initService(clientConfig);
+//        }
         this.dependencies = dependentJars;
     }
 
@@ -62,11 +69,14 @@ public class AdjustBalancePipeline implements Runnable {
             HazelcastInstance hazelcast = service.getHazelcastInstance();
             JobConfig jobConfig = new JobConfig();
             jobConfig.setName("AccountService.AdjustBalance");
-            for (URL url : dependencies)
+            for (URL url : dependencies) {
                 jobConfig.addJar(url);
+                logger.info("AdjustBalancePipeline job config adding " + url);
+            }
             hazelcast.getJet().newJob(createPipeline(), jobConfig);
 
         } catch (Exception e) { // Happens if our pipeline is not valid
+            logger.info("Error on AdjustBalance submission");
             e.printStackTrace();
         }
     }
@@ -100,7 +110,16 @@ public class AdjustBalancePipeline implements Runnable {
         // materialized view using an EntryProcessor, and publish the event to all subscribers
         ServiceFactory<?, EventSourcingController<Account,String, AccountEvent>> eventController =
                 ServiceFactories.sharedService(
-                        (ctx) -> service.getEventSourcingController());
+                        (ctx) -> {
+                            if (service == null) {
+                                System.out.println("AdjustBalancePipeline service factory needs to get or initialize service");
+                                ServiceInitRequest initRequest = new ServiceInitRequest()
+                                        .setHazelcastInstance(ctx.hazelcastInstance())
+                                        .initEventSourcingController();
+                                service = AccountService.getInstance(initRequest); // no clientconfig
+                            }
+                            return service.getEventSourcingController();
+                        });
 
         events.mapUsingServiceAsync(eventController, (controller, tuple) -> {
             // Returns CompletableFuture<CompletionInfo>
@@ -112,7 +131,8 @@ public class AdjustBalancePipeline implements Runnable {
         .map(completion -> {
             UUID uuid = completion.getUUID();
             //System.out.println("AdjustBalancePipeline received completion for " + uuid);
-            BalanceChangeEvent event = (BalanceChangeEvent) completion.getEvent();
+            GenericRecord eventGR = completion.getEvent();
+            BalanceChangeEvent event = new BalanceChangeEvent(eventGR);
             //String acctNumber = event.getKey();
             BigDecimal balanceChange = event.getBalanceChange();
             // Convert amount to cents as protobuf has no decimal type

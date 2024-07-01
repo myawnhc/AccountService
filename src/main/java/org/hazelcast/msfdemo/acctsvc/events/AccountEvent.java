@@ -17,10 +17,11 @@
 
 package org.hazelcast.msfdemo.acctsvc.events;
 
+import com.hazelcast.nio.serialization.genericrecord.GenericRecord;
 import org.hazelcast.eventsourcing.event.SourcedEvent;
 import org.hazelcast.msfdemo.acctsvc.domain.Account;
 
 import java.util.function.UnaryOperator;
 
-public abstract class AccountEvent extends SourcedEvent<Account, String> implements UnaryOperator<Account> {
+public abstract class AccountEvent extends SourcedEvent<Account, String>  {
 }

@@ -17,6 +17,7 @@ hazelcast:
   properties:
     # This is not working but setting via system env variable HZ_USERCODEDEPLOYMENT_ENABLED=true does work ...
     hazelcast.user-code-deployment.enabled: true
+
   jet:
     enabled: true
     resource-upload-enabled: true

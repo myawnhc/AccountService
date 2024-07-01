@@ -53,7 +53,8 @@ public class AccountDAO {
         //super(controller, "account");
         this.hazelcast = hz;
         accountMap = hazelcast.getMap("account_VIEW");
-        hazelcast.getSql().execute(CREATE_MAPPING); 
+        // Fails in Docker environment
+        //hazelcast.getSql().execute(CREATE_MAPPING);
     }
 
     // Non-inheritable query methods
